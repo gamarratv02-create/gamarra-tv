@@ -2,54 +2,39 @@
 <html lang="es">
 
 <head>
-
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="description"
-        content="Gamarra TV - Noticias, televisión, deportes y actualidad."
-    >
+    <meta name="description"
+          content="Gamarra TV - Noticias, televisión, deportes y actualidad del sur del Cesar y el Magdalena Medio.">
 
-    <meta
-        name="theme-color"
-        content="#061a33"
-    >
+    <meta name="theme-color"
+          content="#061b36">
 
     <title>Gamarra TV | Noticias y Televisión</title>
 
-    <!-- FAVICON / LOGO DEL SITIO -->
-    <link
-        rel="icon"
-        type="image/png"
-        href="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
-    >
-
-    <link
-        rel="shortcut icon"
-        type="image/png"
-        href="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
-    >
+    <!-- FAVICON GAMARRA TV -->
+    <link rel="icon"
+          type="image/png"
+          href="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png">
 
     <link rel="apple-touch-icon"
-        href="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
-    >
+          href="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png">
 
-    <link
-        rel="stylesheet"
-        href="styles.css"
-    >
+    <!-- SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!-- CSS -->
+    <link rel="stylesheet"
+          href="styles.css">
 </head>
 
 <body>
 
 <!-- =====================================================
-     BARRA SUPERIOR
+     TOPBAR
 ===================================================== -->
 
 <div class="topbar">
@@ -62,35 +47,27 @@
 
         <div class="social-mini">
 
-            <a
-                href="https://www.facebook.com/GamarraTelvision"
-                target="_blank"
-                rel="noopener"
-            >
+            <a href="https://www.facebook.com/GamarraTelvision"
+               target="_blank"
+               rel="noopener">
                 Facebook
             </a>
 
-            <a
-                href="https://www.youtube.com/@gamarratvoficial"
-                target="_blank"
-                rel="noopener"
-            >
+            <a href="https://www.youtube.com/@gamarratvoficial"
+               target="_blank"
+               rel="noopener">
                 YouTube
             </a>
 
-            <a
-                href="https://www.instagram.com/gamarratvoficial/"
-                target="_blank"
-                rel="noopener"
-            >
+            <a href="https://www.instagram.com/gamarratvoficial/"
+               target="_blank"
+               rel="noopener">
                 Instagram
             </a>
 
-            <a
-                href="https://www.tiktok.com/@gamarratvoficial"
-                target="_blank"
-                rel="noopener"
-            >
+            <a href="https://www.tiktok.com/@gamarratvoficial"
+               target="_blank"
+               rel="noopener">
                 TikTok
             </a>
 
@@ -109,15 +86,12 @@
 
     <div class="container header-main">
 
-        <a
-            class="brand"
-            href="#/"
-        >
+        <a class="brand"
+           href="#/">
 
             <img
                 src="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
-                alt="Gamarra TV"
-            >
+                alt="Gamarra TV">
 
         </a>
 
@@ -125,16 +99,16 @@
         <button
             class="menu-toggle"
             id="menuToggle"
-            type="button"
-        >
+            aria-label="Abrir menú">
+
             ☰
+
         </button>
 
 
         <nav
             id="mainNav"
-            class="main-nav"
-        >
+            class="main-nav">
 
             <a href="#/">
                 Inicio
@@ -168,18 +142,18 @@
                 Entretenimiento
             </a>
 
-            <a
-                class="live-link"
-                href="#/en-vivo"
-            >
+            <a class="live-link"
+               href="#/en-vivo">
+
                 🔴 En vivo
+
             </a>
 
-            <a
-                class="login-link"
-                href="#/iniciar-sesion"
-            >
+            <a class="login-link"
+               href="#/login">
+
                 🔐 Iniciar sesión
+
             </a>
 
         </nav>
@@ -190,7 +164,7 @@
 
 
 <!-- =====================================================
-     CONTENIDO PRINCIPAL
+     CONTENIDO
 ===================================================== -->
 
 <main id="app">
@@ -216,18 +190,16 @@
 
     <div class="container footer-grid">
 
-
         <div>
 
             <img
                 class="footer-logo"
                 src="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
-                alt="Gamarra TV"
-            >
+                alt="Gamarra TV">
 
             <p>
-                Información, televisión y actualidad para Gamarra,
-                el sur del Cesar y el Magdalena Medio.
+                Información, televisión y actualidad para
+                Gamarra, el sur del Cesar y el Magdalena Medio.
             </p>
 
         </div>
@@ -276,35 +248,27 @@
                 Síguenos
             </h3>
 
-            <a
-                href="https://www.facebook.com/GamarraTelvision"
-                target="_blank"
-                rel="noopener"
-            >
+            <a href="https://www.facebook.com/GamarraTelvision"
+               target="_blank"
+               rel="noopener">
                 Facebook
             </a>
 
-            <a
-                href="https://www.youtube.com/@gamarratvoficial"
-                target="_blank"
-                rel="noopener"
-            >
+            <a href="https://www.youtube.com/@gamarratvoficial"
+               target="_blank"
+               rel="noopener">
                 YouTube
             </a>
 
-            <a
-                href="https://www.instagram.com/gamarratvoficial/"
-                target="_blank"
-                rel="noopener"
-            >
+            <a href="https://www.instagram.com/gamarratvoficial/"
+               target="_blank"
+               rel="noopener">
                 Instagram
             </a>
 
-            <a
-                href="https://www.tiktok.com/@gamarratvoficial"
-                target="_blank"
-                rel="noopener"
-            >
+            <a href="https://www.tiktok.com/@gamarratvoficial"
+               target="_blank"
+               rel="noopener">
                 TikTok
             </a>
 
@@ -324,16 +288,7 @@
 
 
 <!-- =====================================================
-     SUPABASE
-===================================================== -->
-
-<script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-></script>
-
-
-<!-- =====================================================
-     APP
+     JAVASCRIPT
 ===================================================== -->
 
 <script src="app.js"></script>
