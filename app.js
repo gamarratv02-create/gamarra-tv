@@ -16,10 +16,10 @@
 
 ========================================================== */
 
-const SUPABASE_URL = "PEGAR_AQUI_TU_PROJECT_URL";
+const SUPABASE_URL = "https://hjexlltqhjdmlwxgptpj.supabase.co";
 
 const SUPABASE_PUBLISHABLE_KEY =
-  "PEGAR_AQUI_TU_PUBLISHABLE_KEY";
+  "sb_publishable_tXJAIc_OeskuGOgXB_7pfg_HyVjbGsF";
 
 
 /* ==========================================================
