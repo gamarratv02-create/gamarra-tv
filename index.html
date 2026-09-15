@@ -1,218 +1,343 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Gamarra TV | Noticias y Televisión</title>
+    <meta charset="UTF-8">
 
-  <meta
-    name="description"
-    content="Gamarra TV: noticias, televisión, deportes, cultura y actualidad de Gamarra, el sur del Cesar y el Magdalena Medio."
-  >
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-  <meta name="author" content="Gamarra TV">
-  <meta name="robots" content="index, follow">
-  <meta name="theme-color" content="#0b1f3a">
+    <meta
+        name="description"
+        content="Gamarra TV - Noticias, televisión, deportes y actualidad."
+    >
 
-  <!-- Favicon -->
-  <link
-    rel="icon"
-    type="image/png"
-    href="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
-  >
+    <meta
+        name="theme-color"
+        content="#061a33"
+    >
 
-  <link
-    rel="apple-touch-icon"
-    href="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
-  >
+    <title>Gamarra TV | Noticias y Televisión</title>
 
-  <!-- Redes sociales -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Gamarra TV | Noticias y Televisión">
-  <meta
-    property="og:description"
-    content="Noticias, televisión, deportes, cultura y actualidad de Gamarra y la región."
-  >
-  <meta
-    property="og:image"
-    content="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
-  >
-  <meta property="og:site_name" content="Gamarra TV">
-  <meta property="og:locale" content="es_CO">
+    <!-- FAVICON / LOGO DEL SITIO -->
+    <link
+        rel="icon"
+        type="image/png"
+        href="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
+    >
 
-  <link rel="stylesheet" href="styles.css">
+    <link
+        rel="shortcut icon"
+        type="image/png"
+        href="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
+    >
+
+    <link rel="apple-touch-icon"
+        href="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
+    >
+
+    <link
+        rel="stylesheet"
+        href="styles.css"
+    >
+
 </head>
 
 <body>
 
-  <!-- BARRA SUPERIOR -->
-  <div class="topbar">
+<!-- =====================================================
+     BARRA SUPERIOR
+===================================================== -->
+
+<div class="topbar">
+
     <div class="container topbar-inner">
 
-      <span>Noticias, televisión y actualidad</span>
+        <span>
+            Noticias, televisión y actualidad
+        </span>
 
-      <div class="social-mini">
-        <a
-          href="https://www.facebook.com/GamarraTelvision"
-          target="_blank"
-          rel="noopener noreferrer"
-        >Facebook</a>
+        <div class="social-mini">
 
-        <a
-          href="https://www.youtube.com/@gamarratvoficial"
-          target="_blank"
-          rel="noopener noreferrer"
-        >YouTube</a>
+            <a
+                href="https://www.facebook.com/GamarraTelvision"
+                target="_blank"
+                rel="noopener"
+            >
+                Facebook
+            </a>
 
-        <a
-          href="https://www.instagram.com/gamarratvoficial/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >Instagram</a>
+            <a
+                href="https://www.youtube.com/@gamarratvoficial"
+                target="_blank"
+                rel="noopener"
+            >
+                YouTube
+            </a>
 
-        <a
-          href="https://www.tiktok.com/@gamarratvoficial"
-          target="_blank"
-          rel="noopener noreferrer"
-        >TikTok</a>
-      </div>
+            <a
+                href="https://www.instagram.com/gamarratvoficial/"
+                target="_blank"
+                rel="noopener"
+            >
+                Instagram
+            </a>
+
+            <a
+                href="https://www.tiktok.com/@gamarratvoficial"
+                target="_blank"
+                rel="noopener"
+            >
+                TikTok
+            </a>
+
+        </div>
 
     </div>
-  </div>
+
+</div>
 
 
-  <!-- ENCABEZADO -->
-  <header class="site-header">
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<header class="site-header">
 
     <div class="container header-main">
 
-      <a class="brand" href="#/" aria-label="Gamarra TV">
-        <img
-          src="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
-          alt="Gamarra TV"
+        <a
+            class="brand"
+            href="#/"
         >
-      </a>
 
-      <button
-        class="menu-toggle"
-        id="menuToggle"
-        type="button"
-        aria-label="Abrir menú"
-      >
-        ☰
-      </button>
+            <img
+                src="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
+                alt="Gamarra TV"
+            >
 
-      <nav id="mainNav" class="main-nav">
-
-        <a href="#/">Inicio</a>
-        <a href="#/categoria/gamarra">Gamarra</a>
-        <a href="#/categoria/judicial">Judicial</a>
-        <a href="#/categoria/deportes">Deportes</a>
-        <a href="#/categoria/region">Región</a>
-        <a href="#/categoria/nacionales">Nacionales</a>
-        <a href="#/categoria/internacionales">Internacionales</a>
-        <a href="#/categoria/entretenimiento">Entretenimiento</a>
-
-        <a class="live-link" href="#/en-vivo">
-          🔴 En vivo
         </a>
 
-        <a class="admin-link" href="#/admin">
-          🔐 Administración
-        </a>
 
-      </nav>
+        <button
+            class="menu-toggle"
+            id="menuToggle"
+            type="button"
+        >
+            ☰
+        </button>
+
+
+        <nav
+            id="mainNav"
+            class="main-nav"
+        >
+
+            <a href="#/">
+                Inicio
+            </a>
+
+            <a href="#/categoria/gamarra">
+                Gamarra
+            </a>
+
+            <a href="#/categoria/judicial">
+                Judicial
+            </a>
+
+            <a href="#/categoria/deportes">
+                Deportes
+            </a>
+
+            <a href="#/categoria/region">
+                Región
+            </a>
+
+            <a href="#/categoria/nacionales">
+                Nacionales
+            </a>
+
+            <a href="#/categoria/internacionales">
+                Internacionales
+            </a>
+
+            <a href="#/categoria/entretenimiento">
+                Entretenimiento
+            </a>
+
+            <a
+                class="live-link"
+                href="#/en-vivo"
+            >
+                🔴 En vivo
+            </a>
+
+            <a
+                class="login-link"
+                href="#/iniciar-sesion"
+            >
+                🔐 Iniciar sesión
+            </a>
+
+        </nav>
 
     </div>
 
-  </header>
+</header>
 
 
-  <!-- CONTENIDO -->
-  <main id="app"></main>
+<!-- =====================================================
+     CONTENIDO PRINCIPAL
+===================================================== -->
+
+<main id="app">
+
+    <div class="loading">
+
+        <div class="spinner"></div>
+
+        <p>
+            Cargando Gamarra TV...
+        </p>
+
+    </div>
+
+</main>
 
 
-  <!-- PIE DE PÁGINA -->
-  <footer class="footer">
+<!-- =====================================================
+     FOOTER
+===================================================== -->
+
+<footer class="footer">
 
     <div class="container footer-grid">
 
-      <div>
 
-        <img
-          class="footer-logo"
-          src="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
-          alt="Gamarra TV"
-        >
+        <div>
 
-        <p>
-          Información, televisión y actualidad para Gamarra,
-          el sur del Cesar y el Magdalena Medio.
-        </p>
+            <img
+                class="footer-logo"
+                src="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
+                alt="Gamarra TV"
+            >
 
-      </div>
+            <p>
+                Información, televisión y actualidad para Gamarra,
+                el sur del Cesar y el Magdalena Medio.
+            </p>
 
-
-      <div>
-
-        <h3>Secciones</h3>
-
-        <a href="#/categoria/gamarra">Gamarra</a>
-        <a href="#/categoria/judicial">Judicial</a>
-        <a href="#/categoria/deportes">Deportes</a>
-        <a href="#/categoria/region">Región</a>
-        <a href="#/categoria/nacionales">Nacionales</a>
-        <a href="#/categoria/internacionales">Internacionales</a>
-        <a href="#/categoria/entretenimiento">Entretenimiento</a>
-
-      </div>
+        </div>
 
 
-      <div>
+        <div>
 
-        <h3>Síguenos</h3>
+            <h3>
+                Secciones
+            </h3>
 
-        <a
-          href="https://www.facebook.com/GamarraTelvision"
-          target="_blank"
-          rel="noopener noreferrer"
-        >Facebook</a>
+            <a href="#/categoria/gamarra">
+                Gamarra
+            </a>
 
-        <a
-          href="https://www.youtube.com/@gamarratvoficial"
-          target="_blank"
-          rel="noopener noreferrer"
-        >YouTube</a>
+            <a href="#/categoria/judicial">
+                Judicial
+            </a>
 
-        <a
-          href="https://www.instagram.com/gamarratvoficial/"
-          target="_blank"
-          rel="noopener noreferrer"
-        >Instagram</a>
+            <a href="#/categoria/deportes">
+                Deportes
+            </a>
 
-        <a
-          href="https://www.tiktok.com/@gamarratvoficial"
-          target="_blank"
-          rel="noopener noreferrer"
-        >TikTok</a>
+            <a href="#/categoria/region">
+                Región
+            </a>
 
-      </div>
+            <a href="#/categoria/nacionales">
+                Nacionales
+            </a>
+
+            <a href="#/categoria/internacionales">
+                Internacionales
+            </a>
+
+            <a href="#/categoria/entretenimiento">
+                Entretenimiento
+            </a>
+
+        </div>
+
+
+        <div>
+
+            <h3>
+                Síguenos
+            </h3>
+
+            <a
+                href="https://www.facebook.com/GamarraTelvision"
+                target="_blank"
+                rel="noopener"
+            >
+                Facebook
+            </a>
+
+            <a
+                href="https://www.youtube.com/@gamarratvoficial"
+                target="_blank"
+                rel="noopener"
+            >
+                YouTube
+            </a>
+
+            <a
+                href="https://www.instagram.com/gamarratvoficial/"
+                target="_blank"
+                rel="noopener"
+            >
+                Instagram
+            </a>
+
+            <a
+                href="https://www.tiktok.com/@gamarratvoficial"
+                target="_blank"
+                rel="noopener"
+            >
+                TikTok
+            </a>
+
+        </div>
 
     </div>
+
 
     <div class="copyright">
-      © 2026 Gamarra TV. Todos los derechos reservados.
+
+        © 2026 Gamarra TV.
+        Todos los derechos reservados.
+
     </div>
 
-  </footer>
+</footer>
 
 
-  <!-- SUPABASE -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- =====================================================
+     SUPABASE
+===================================================== -->
 
-  <!-- APP -->
-  <script src="app.js"></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+
+<!-- =====================================================
+     APP
+===================================================== -->
+
+<script src="app.js"></script>
 
 </body>
+
 </html>
