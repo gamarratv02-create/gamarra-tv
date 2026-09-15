@@ -1,39 +1,25 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="description" content="Gamarra TV - Noticias, televisión, deportes y actualidad.">
-<title>Gamarra TV | Noticias y Televisión</title>
-<link rel="stylesheet" href="styles.css">
-</head>
-<body>
-<div class="topbar"><div class="container topbar-inner">
-<span>Noticias, televisión y actualidad</span>
-<div class="social-mini">
-<a href="https://www.facebook.com/GamarraTelvision" target="_blank" rel="noopener">Facebook</a>
-<a href="https://www.youtube.com/@gamarratvoficial" target="_blank" rel="noopener">YouTube</a>
-<a href="https://www.instagram.com/gamarratvoficial/" target="_blank" rel="noopener">Instagram</a>
-<a href="https://www.tiktok.com/@gamarratvoficial" target="_blank" rel="noopener">TikTok</a>
-</div></div></div>
+const imgs={general:"https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80",city:"https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=900&q=80",police:"https://images.unsplash.com/photo-1453873531674-2151bcd01707?auto=format&fit=crop&w=900&q=80",sports:"https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=900&q=80",region:"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=900&q=80"};
+const news=[
+{id:1,category:"Gamarra",slug:"gamarra-noticia-destacada",title:"Gamarra TV: información y actualidad de nuestra comunidad",summary:"Este espacio está preparado para presentar las noticias más importantes de Gamarra y la región.",image:imgs.city,date:"15 de septiembre de 2026",featured:true},
+{id:2,category:"Judicial",slug:"noticia-judicial-destacada",title:"Autoridades adelantan acciones para fortalecer la seguridad en la región",summary:"Información en desarrollo. Aquí podrás publicar el contenido completo desde el panel de administración.",image:imgs.police,date:"15 de septiembre de 2026",featured:true},
+{id:3,category:"Deportes",slug:"noticia-deportiva-destacada",title:"Toda la actualidad deportiva en Gamarra TV",summary:"Resultados, partidos, transmisiones y protagonistas del deporte regional.",image:imgs.sports,date:"15 de septiembre de 2026",featured:true},
+{id:4,category:"Región",slug:"actualidad-region",title:"Noticias de última hora del sur del Cesar y Magdalena Medio",summary:"Conoce las noticias que son noticia en nuestra región.",image:imgs.region,date:"15 de septiembre de 2026"},
+{id:5,category:"Gamarra",slug:"informacion-gamarra",title:"Gamarra, protagonista de las noticias locales",summary:"La información de nuestros barrios, corregimientos y comunidades.",image:imgs.city,date:"14 de septiembre de 2026"},
+{id:6,category:"Judicial",slug:"seguridad-region",title:"Información judicial: conozca los hechos de la región",summary:"Noticias judiciales con información clara y responsable.",image:imgs.police,date:"14 de septiembre de 2026"},
+{id:7,category:"Deportes",slug:"deporte-regional",title:"El deporte regional tiene su espacio en Gamarra TV",summary:"Seguimos a nuestros equipos y deportistas.",image:imgs.sports,date:"13 de septiembre de 2026"},
+{id:8,category:"Nacionales",slug:"noticia-nacional",title:"Las principales noticias nacionales",summary:"Información de Colombia y sus regiones.",image:imgs.general,date:"13 de septiembre de 2026"}];
 
-<header class="site-header"><div class="container header-main">
-<a class="brand" href="#/"><img src="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png" alt="Gamarra TV"></a>
-<button class="menu-toggle" id="menuToggle">☰</button>
-<nav id="mainNav" class="main-nav">
-<a href="#/">Inicio</a><a href="#/categoria/gamarra">Gamarra</a><a href="#/categoria/judicial">Judicial</a>
-<a href="#/categoria/deportes">Deportes</a><a href="#/categoria/region">Región</a><a href="#/categoria/nacionales">Nacionales</a>
-<a href="#/categoria/internacionales">Internacionales</a><a href="#/categoria/entretenimiento">Entretenimiento</a>
-<a class="live-link" href="#/en-vivo">🔴 En vivo</a>
-</nav></div></header>
+const schedule={lun:[["8:00 a.m.","Noticias y actualidad"],["12:00 p.m.","Noticias Gamarra TV"],["1:30 p.m.","Programación Gamarra TV"],["6:00 p.m.","Edición informativa"],["7:00 p.m.","Noticias y actualidad"]],mar:[["8:00 a.m.","Noticias y actualidad"],["12:00 p.m.","Noticias Gamarra TV"],["1:30 p.m.","Programación Gamarra TV"],["6:00 p.m.","Edición informativa"],["7:00 p.m.","Noticias y actualidad"]],mie:[["8:00 a.m.","Noticias y actualidad"],["12:00 p.m.","Noticias Gamarra TV"],["1:30 p.m.","Programación Gamarra TV"],["6:00 p.m.","Edición informativa"],["7:00 p.m.","Noticias y actualidad"]],jue:[["8:00 a.m.","Noticias y actualidad"],["12:00 p.m.","Noticias Gamarra TV"],["1:30 p.m.","Programación Gamarra TV"],["6:00 p.m.","Edición informativa"],["7:00 p.m.","Noticias y actualidad"]],vie:[["8:00 a.m.","Noticias y actualidad"],["12:00 p.m.","Noticias Gamarra TV"],["1:30 p.m.","Programación Gamarra TV"],["6:00 p.m.","Edición informativa"],["7:00 p.m.","Noticias y actualidad"]],sab:[["9:00 a.m.","Programación deportiva"],["12:00 p.m.","Noticias Gamarra TV"],["3:00 p.m.","Deportes en vivo"],["7:00 p.m.","Noticias y actualidad"]],dom:[["9:00 a.m.","Programación especial"],["12:00 p.m.","Noticias Gamarra TV"],["6:00 p.m.","Programación especial"],["7:00 p.m.","Noticias y actualidad"]]};
 
-<main id="app"></main>
+const app=document.getElementById("app"),toggle=document.getElementById("menuToggle"),nav=document.getElementById("mainNav");
+toggle.onclick=()=>nav.classList.toggle("open");nav.querySelectorAll("a").forEach(a=>a.onclick=()=>nav.classList.remove("open"));
 
-<footer class="footer"><div class="container footer-grid">
-<div><img class="footer-logo" src="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png" alt="Gamarra TV">
-<p>Información, televisión y actualidad para Gamarra, el sur del Cesar y el Magdalena Medio.</p></div>
-<div><h3>Secciones</h3><a href="#/categoria/gamarra">Gamarra</a><a href="#/categoria/judicial">Judicial</a><a href="#/categoria/deportes">Deportes</a><a href="#/categoria/region">Región</a></div>
-<div><h3>Síguenos</h3><a href="https://www.facebook.com/GamarraTelvision" target="_blank">Facebook</a><a href="https://www.youtube.com/@gamarratvoficial" target="_blank">YouTube</a><a href="https://www.instagram.com/gamarratvoficial/" target="_blank">Instagram</a><a href="https://www.tiktok.com/@gamarratvoficial" target="_blank">TikTok</a></div>
-</div><div class="copyright">© 2026 Gamarra TV. Todos los derechos reservados.</div></footer>
-<script src="app.js"></script>
-</body></html>
+function card(n){return `<a class="news-card" href="#/noticia/${n.slug}"><div class="card-image" style="background-image:url('${n.image}')"></div><div class="card-body"><span class="category-label">${n.category}</span><h3>${n.title}</h3><p>${n.summary}</p><div class="date" style="margin-top:10px">${n.date}</div></div></a>`}
+function live(){return `<section class="live-wrap"><div class="container live-grid"><div class="live-player"><iframe src="https://new.opencaster.com/player/embed?user=gamarratv" title="Señal en vivo de Gamarra TV" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen></iframe></div><aside class="program-card"><h2 class="program-title"><span class="dot"></span> PROGRAMACIÓN</h2><div class="days">${[["LUN","lun"],["MAR","mar"],["MIÉ","mie"],["JUE","jue"],["VIE","vie"],["SÁB","sab"],["DOM","dom"]].map((d,i)=>`<button class="day ${i===1?"active":""}" data-day="${d[1]}">${d[0]}</button>`).join("")}</div><div class="schedule" id="schedule"></div><div class="live-note">La programación se puede editar posteriormente desde el panel de administración.</div></aside></div></section>`}
+function renderSchedule(day="mar"){let box=document.getElementById("schedule");if(!box)return;box.innerHTML=(schedule[day]||[]).map((x,i)=>`<div class="program-item ${i===2&&day==="mar"?"current":""}"><div>${i===2&&day==="mar"?'<span class="status">● AHORA</span>':""}<span class="program-time">${x[0]}</span></div><div class="program-name">${x[1]}</div></div>`).join("");document.querySelectorAll(".day").forEach(b=>{b.classList.toggle("active",b.dataset.day===day);b.onclick=()=>renderSchedule(b.dataset.day)})}
+function block(name,key){let l=news.filter(n=>n.category.toLowerCase()===key).slice(0,3);if(!l.length)return"";return `<section class="section container"><div class="section-head"><h2>${name}</h2><a href="#/categoria/${key}">Ver más →</a></div><div class="news-grid">${l.map(card).join("")}</div></section>`}
+function home(){let f=news.filter(n=>n.featured),m=f[0],s=f.slice(1,3);return `${live()}<section class="hero container"><div class="hero-grid"><a class="hero-main" href="#/noticia/${m.slug}"><div class="hero-image" style="background-image:url('${m.image}')"></div><div class="hero-content"><span class="tag">${m.category}</span><h1>${m.title}</h1><p>${m.summary}</p></div></a><div class="hero-side">${s.map(n=>`<a class="story-card side-story" href="#/noticia/${n.slug}"><div class="story-image" style="background-image:url('${n.image}')"></div><div class="side-content"><span class="tag">${n.category}</span><h3>${n.title}</h3><div class="date">${n.date}</div></div></a>`).join("")}</div></div></section><section class="section container"><div class="section-head"><h2>📰 Últimas noticias</h2></div><div class="news-grid">${news.slice(0,6).map(card).join("")}</div></section>${block("Gamarra","gamarra")}${block("Judicial","judicial")}${block("Deportes","deportes")}${block("Región","región")}`}
+function category(cat){let l=news.filter(n=>n.category.toLowerCase()===cat.toLowerCase()),t=cat.charAt(0).toUpperCase()+cat.slice(1);return `<section class="container page-head"><h1>Noticias de ${t}</h1><p>Información y actualidad de ${t} en Gamarra TV.</p></section><section class="section container"><div class="category-grid">${l.length?l.map(card).join(""):'<div class="empty">Todavía no hay noticias publicadas en esta categoría.</div>'}</div></section>`}
+function article(slug){let n=news.find(x=>x.slug===slug);if(!n)return `<section class="container page-head"><h1>Noticia no encontrada</h1></section>`;return `<article class="article"><span class="tag">${n.category}</span><h1>${n.title}</h1><div class="article-meta">Publicado el ${n.date} · Gamarra TV</div><img src="${n.image}" alt="${n.title}"><p class="lead">${n.summary}</p><div class="article-content"><p>Esta es la página individual de la noticia. En la versión conectada a Supabase aparecerá aquí el contenido completo que publiques desde el panel de administración.</p><p>El sistema permitirá agregar fotografías, videos de YouTube, etiquetas, fecha, autor y contenido completo.</p></div></article>`}
+function render(){let p=location.hash.replace(/^#\/?/,"").replace(/\/$/,""),h;if(!p)h=home();else if(p==="en-vivo")h=live();else if(p.startsWith("noticia/"))h=article(p.split("/")[1]);else if(p.startsWith("categoria/"))h=category(p.split("/")[1]);else h='<section class="container page-head"><h1>Gamarra TV</h1><p>Portal de noticias y televisión.</p></section>';app.innerHTML=h;if(!p||p==="en-vivo")renderSchedule("mar");window.scrollTo(0,0)}
+window.addEventListener("hashchange",render);render();
