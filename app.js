@@ -72,6 +72,24 @@ function newsPage(initialCat=''){
  chips.forEach(ch=>ch.onclick=()=>{activeCat=ch.dataset.cat;paint()});
  paint();
 }
+function home(){
+ const topics=S.news.slice(0,8);
+ const latest=S.news.slice(0,8);
+ const heroNews=S.news.slice(0,3);
+ const topicHtml=topics.length?topics.map(n=>`<a class="topic-item" href="${newsHref(n)}">${esc(n.titulo)}</a>`).join(''):'<span class="topic-empty">Noticias y actualidad de Gamarra TV</span>';
+ const latestHtml=latest.length?latest.map(card).join(''):'<div class="empty"><h2>No hay noticias publicadas</h2><p>Las noticias publicadas aparecerán aquí.</p></div>';
+ const main=heroNews[0], side1=heroNews[1], side2=heroNews[2];
+ const feature=(n,cls='')=>n?`<a class="home-feature ${cls}" href="${newsHref(n)}">${n.imagen_url?`<img src="${esc(n.imagen_url)}" alt="${esc(n.titulo)}">`:''}<div class="home-feature-overlay"><span class="tag">${esc(categoryLabel(n.categoria))}</span><h2>${esc(n.titulo)}</h2><small>${esc(shortDate(n.created_at))}</small></div></a>`:'';
+ return `<div class="signal-inspired-home">
+  <section class="topics-bar"><div class="container topics-inner"><strong>Temas del día</strong><div class="topics-list">${topicHtml}</div></div></section>
+  <section class="home-intro"><div class="container"><div class="brand-kicker">GAMARRA TV</div><h1>Noticias, televisión y actualidad</h1><p>Información de Gamarra, el sur del Cesar y el Magdalena Medio.</p></div></section>
+  <section class="home-features"><div class="container home-feature-grid"><div>${feature(main,'home-feature-main')}</div><div class="home-feature-side">${feature(side1)}${feature(side2)}</div></div></section>
+  ${live()}
+  <section class="section latest-home"><div class="container"><div class="section-head"><div><span class="kicker">GTV NOTICIAS</span><h2>Últimas noticias</h2><p class="section-subtitle">Las noticias más recientes publicadas por Gamarra TV.</p></div><div class="carousel-btns"><button id="prev" aria-label="Noticias anteriores">←</button><button id="next" aria-label="Más noticias">→</button></div></div><div class="category-strip"><a class="category-pill active" href="#/noticias">Todas</a>${CATS.map(c=>`<a class="category-pill" href="#/categoria/${c}">${esc(categoryLabel(c))}</a>`).join('')}</div><div class="news-carousel" id="carousel">${latestHtml}</div></div></section>
+  ${homeSections()}
+  <section class="home-directory"><div class="container"><div class="directory-card"><div><span class="kicker">GAMARRA TV</span><h2>Todo Gamarra TV en un solo lugar</h2><p>Consulta noticias, programación, clima, señal en vivo y formas de contacto.</p></div><div class="directory-links"><a href="#/noticias">📰 Noticias</a><a href="#/en-vivo">🔴 En vivo</a><a href="#/clima">☀️ Clima</a><a href="#/contacto">✉️ Contacto</a></div></div></div></section>
+ </div>`;
+}
 function homeSections(){return `<section class="section category-sections"><div class="container">${CATS.map(cat=>{const items=S.news.filter(n=>String(n.categoria||'').toLowerCase()===cat).slice(0,4);if(!items.length)return '';return `<div class="news-category-section"><div class="section-head compact"><div><span class="kicker">GTV NOTICIAS</span><h2>${esc(categoryLabel(cat))}</h2></div><a class="section-more" href="#/categoria/${cat}">Ver todas →</a></div><div class="section-news-grid">${items.map(card).join('')}</div></div>`}).join('')}</div></section>`}
 function bindHome(){bindLive();const p=document.getElementById('prev'),n=document.getElementById('next'),c=document.getElementById('carousel');if(p)p.onclick=()=>c.scrollBy({left:-390,behavior:'smooth'});if(n)n.onclick=()=>c.scrollBy({left:390,behavior:'smooth'});const first=S.news[0];if(first)document.getElementById('breakingText').textContent=first.titulo}
 function bindLive(){document.querySelectorAll('.day').forEach(b=>b.onclick=()=>{S.day=b.dataset.day;render()})}
