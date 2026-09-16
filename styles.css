@@ -126,3 +126,93 @@
 
 /* Productos, servicios y clientes */
 .services-section,.clients-section{padding:52px 0;background:#f6f9fc}.clients-section{background:#fff}.services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.service-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:var(--shadow);position:relative;overflow:hidden}.service-card:before{content:"";position:absolute;left:0;top:0;width:100%;height:4px;background:linear-gradient(90deg,var(--blue),var(--cyan))}.service-icon{font-size:36px;margin-bottom:12px}.service-card h3{font-size:22px;margin:0 0 10px;color:var(--navy)}.service-card p{color:var(--muted);line-height:1.65;min-height:70px}.service-btn{display:inline-flex;align-items:center;background:#071a35;color:#fff!important;padding:11px 16px;border-radius:10px;font-size:12px;font-weight:900;margin-top:12px}.service-btn:hover{background:var(--blue)}.clients-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}.client-card{display:block;background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow);transition:.2s;overflow:hidden}.client-card:hover{transform:translateY(-3px);border-color:#69b9ea}.client-logo{height:180px;display:grid;place-items:center;background:#f7fafc;border-radius:13px;overflow:hidden}.client-logo img{max-width:88%;max-height:88%;object-fit:contain}.client-info{padding:15px 3px 3px}.client-info h3{margin:0 0 7px;font-size:18px;color:var(--navy)}.client-info p{margin:0 0 10px;color:var(--muted);font-size:12px;line-height:1.5}.client-info span{color:var(--blue);font-size:12px;font-weight:900}.client-loading{grid-column:1/-1;text-align:center;padding:30px;color:var(--muted)}.client-admin-logo{background:#f5f8fb}.client-admin-logo img{object-fit:contain!important;background:#fff}@media(max-width:900px){.services-grid{grid-template-columns:1fr}.clients-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:600px){.clients-grid{grid-template-columns:1fr}.client-logo{height:200px}}
+
+/* Gamarra TV — ajustes responsive para móviles y tablets */
+html,body{max-width:100%;overflow-x:hidden}
+body{min-width:0}
+.container,.header-in,.topbar-in{min-width:0}
+.header-in>*{min-width:0}
+.header nav{min-width:0}
+.topbar-in>div{min-width:0;display:flex;align-items:center;flex-wrap:wrap}
+img,iframe{max-width:100%}
+.home-only-section{width:100%;}
+
+@media (max-width:850px){
+  .topbar{overflow:hidden}
+  .topbar-in{min-height:36px;padding:7px 0;justify-content:flex-end}
+  .topbar-in>div{justify-content:flex-end;gap:10px}
+  .topbar a{margin-left:0;font-size:11px}
+  .header-in{gap:8px}
+  .logo{flex:0 1 auto;min-width:0}
+  .logo img{max-width:125px;height:auto}
+  .menu-toggle{flex:0 0 46px}
+  .login{flex:0 0 auto;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+  .header nav{left:11px;right:11px;max-width:calc(100vw - 22px);overflow:hidden}
+  .breaking .container{min-width:0}
+  .breaking span{min-width:0}
+  .home-feature-grid,.live-layout,.contact-layout{min-width:0}
+  .player,.schedule,.live-layout>*{min-width:0}
+  .services-grid,.clients-grid,.section-news-grid,.category-news-grid{min-width:0}
+}
+
+@media (max-width:600px){
+  .container{width:calc(100% - 20px);max-width:100%}
+  .topbar-in>div a:nth-child(n+3){display:none}
+  .header-in{min-height:68px}
+  .logo img{width:112px}
+  .login{font-size:10px;padding:10px 9px;max-width:126px}
+  .menu-toggle{width:44px;height:44px;font-size:23px}
+  .breaking .container{gap:7px}
+  .breaking b{font-size:10px;padding:7px 8px}
+  .breaking span{font-size:11px}
+  .topics-inner{width:100%;overflow:hidden}
+  .topics-list{min-width:0;max-width:100%;overflow-x:auto}
+  .home-feature-main{min-height:310px}
+  .home-feature-overlay h2{font-size:21px;line-height:1.12}
+  .home-feature-side{min-width:0}
+  .latest-home .section-head,.section-head{gap:12px;min-width:0}
+  .section-head>div{min-width:0}
+  .section h2{font-size:25px}
+  .section-subtitle{font-size:12px}
+  .news-carousel{grid-auto-columns:minmax(0,calc(100vw - 30px));width:100%;max-width:100%}
+  .news-card{min-width:0}
+  .live-section{padding:28px 0}
+  .live-layout{grid-template-columns:minmax(0,1fr)!important}
+  .player{width:100%;min-height:0;aspect-ratio:16/9}
+  .schedule{width:100%;max-width:100%;overflow:hidden}
+  .days{min-width:0}
+  .day{min-width:0}
+  .schedule-list{max-width:100%;overflow-x:hidden}
+  .program{min-width:0}
+  .program-info{min-width:0;overflow:hidden}
+  .program strong,.program small{overflow-wrap:anywhere}
+  .directory-card{width:100%;min-width:0}
+  .directory-links{grid-template-columns:1fr;width:100%;min-width:0}
+  .services-section,.clients-section{padding:38px 0}
+  .services-grid{grid-template-columns:1fr;gap:14px}
+  .service-card{padding:22px}
+  .service-card p{min-height:0}
+  .clients-grid{grid-template-columns:1fr}
+  .client-logo{height:180px}
+  .footer-grid{grid-template-columns:1fr;gap:22px}
+  .footer{overflow:hidden}
+  .footer a{overflow-wrap:anywhere}
+  .contact-hero h1,.weather-hero h1{font-size:36px}
+  .contact-main,.contact-side,.contact-card,.weather-current,.weather-search{min-width:0}
+  .weather-stats{grid-template-columns:1fr 1fr 1fr;min-width:0}
+  .forecast-grid{grid-template-columns:1fr 1fr}
+  .form-grid{min-width:0}
+  .field input,.field select,.field textarea{max-width:100%;width:100%}
+}
+
+@media (max-width:380px){
+  .container{width:calc(100% - 14px)}
+  .logo img{width:98px}
+  .login{max-width:112px;font-size:9px;padding:9px 7px}
+  .menu-toggle{width:40px;height:40px}
+  .breaking b{font-size:9px}
+  .breaking span{font-size:10px}
+  .home-intro h1{font-size:28px}
+  .weather-stats{grid-template-columns:1fr}
+  .forecast-grid{grid-template-columns:1fr}
+}
