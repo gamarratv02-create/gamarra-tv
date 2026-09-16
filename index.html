@@ -1,8 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>Gamarra TV | Noticias y Televisión</title>
 
@@ -23,7 +29,7 @@
     href="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
   >
 
-  <!-- ESTILOS -->
+  <!-- CSS -->
   <link rel="stylesheet" href="styles.css">
 
   <!-- SUPABASE -->
@@ -31,26 +37,34 @@
 
   <!-- CONFIGURACIÓN -->
   <script>
+
     window.__SUPABASE_CONFIG__ = {
-      url: "https://hjexlltqhjdmlwxgptpj.supabase.co",
 
-      /*
-       * IMPORTANTE:
-       * Esta es la Publishable Key.
-       * NO colocar aquí una sb_secret_...
-       */
-      publishableKey: "sb_publishable_tXJAIc_OeskuGOgX B_7pfg_HyVjbGsF".replace(" ", ""),
+      url:
+        "https://hjexlltqhjdmlwxgptpj.supabase.co",
 
-      /* SEÑAL EN VIVO DE GAMARRA TV */
-      liveUrl: "https://new.opencaster.com/player/embed?user=gamarratv"
+      publishableKey:
+        "sb_publishable_tXJAIc_OeskuGOgXB_7pfg_HyVjbGsF",
+
+      liveUrl:
+        "https://new.opencaster.com/player/embed?user=gamarratv"
+
     };
+
   </script>
+
 </head>
+
 
 <body>
 
-  <!-- BARRA SUPERIOR -->
+
+  <!-- =====================================================
+       BARRA SUPERIOR
+  ====================================================== -->
+
   <div class="topbar">
+
     <div class="container topbar-inner">
 
       <div class="topbar-title">
@@ -58,6 +72,7 @@
       </div>
 
       <div class="social-mini">
+
         <a
           href="https://www.facebook.com/GamarraTelvision"
           target="_blank"
@@ -89,19 +104,27 @@
         >
           TikTok
         </a>
+
       </div>
 
     </div>
+
   </div>
 
 
-  <!-- ENCABEZADO -->
+  <!-- =====================================================
+       HEADER
+  ====================================================== -->
+
   <header class="site-header">
 
     <div class="container header-main">
 
-      <!-- LOGO -->
-      <a class="brand" href="#/" aria-label="Gamarra TV - Inicio">
+      <a
+        class="brand"
+        href="#/"
+        aria-label="Gamarra TV"
+      >
 
         <img
           src="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
@@ -111,19 +134,19 @@
       </a>
 
 
-      <!-- BOTÓN MENÚ MÓVIL -->
       <button
-        class="menu-toggle"
         id="menuToggle"
+        class="menu-toggle"
         type="button"
-        aria-label="Abrir menú"
       >
         ☰
       </button>
 
 
-      <!-- NAVEGACIÓN -->
-      <nav id="mainNav" class="main-nav">
+      <nav
+        id="mainNav"
+        class="main-nav"
+      >
 
         <a href="#/">Inicio</a>
 
@@ -155,19 +178,18 @@
           Entretenimiento
         </a>
 
-        <!-- EN VIVO -->
         <a
-          class="live-link"
           href="#/en-vivo"
+          class="live-link"
         >
-          🔴 En vivo
+          <span class="live-dot"></span>
+          En vivo
         </a>
 
-        <!-- INICIAR SESIÓN -->
         <a
+          href="#/login"
           id="authLink"
           class="login-link"
-          href="#/login"
         >
           🔒 Iniciar sesión
         </a>
@@ -179,23 +201,34 @@
   </header>
 
 
-  <!-- CONTENIDO -->
+  <!-- =====================================================
+       APP
+  ====================================================== -->
+
   <main id="app">
 
     <div class="loading-page">
+
       <div class="loading-spinner"></div>
-      <p>Cargando Gamarra TV...</p>
+
+      <p>
+        Cargando Gamarra TV...
+      </p>
+
     </div>
 
   </main>
 
 
-  <!-- PIE DE PÁGINA -->
+  <!-- =====================================================
+       FOOTER
+  ====================================================== -->
+
   <footer class="footer">
 
     <div class="container footer-grid">
 
-      <!-- INFORMACIÓN -->
+
       <div class="footer-column">
 
         <img
@@ -212,10 +245,11 @@
       </div>
 
 
-      <!-- SECCIONES -->
       <div class="footer-column">
 
-        <h3>Secciones</h3>
+        <h3>
+          Secciones
+        </h3>
 
         <a href="#/categoria/gamarra">
           Gamarra
@@ -240,10 +274,11 @@
       </div>
 
 
-      <!-- REDES -->
       <div class="footer-column">
 
-        <h3>Síguenos</h3>
+        <h3>
+          Síguenos
+        </h3>
 
         <a
           href="https://www.facebook.com/GamarraTelvision"
@@ -283,14 +318,21 @@
 
 
     <div class="copyright">
-      © 2026 Gamarra TV. Todos los derechos reservados.
+
+      © 2026 Gamarra TV.
+      Todos los derechos reservados.
+
     </div>
 
   </footer>
 
 
-  <!-- JAVASCRIPT DE GAMARRA TV -->
-  <script src="app.js" defer></script>
+  <!-- APP JS -->
+  <script
+    src="app.js"
+    defer
+  ></script>
 
 </body>
+
 </html>
