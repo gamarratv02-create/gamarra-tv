@@ -101,3 +101,25 @@
 .news-category-chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 22px}.news-chip{border:1px solid #cbd8e3;background:#fff;color:#26445e;border-radius:999px;padding:8px 13px;font-size:10px;font-weight:900;cursor:pointer;transition:.2s}.news-chip:hover,.news-chip.active{background:#082b49;color:#fff;border-color:#082b49}
 .news-search-grid{margin-top:0}.news-empty{grid-column:1/-1;background:#fff;border:1px dashed #cbd8e3;border-radius:14px;padding:55px 20px}.news-empty h2{margin:0 0 7px;color:#122438}.news-empty p{margin:0;color:#72889a}
 @media(max-width:760px){.news-page-hero{align-items:flex-start;flex-direction:column;padding:28px 22px}.news-page-hero h1{font-size:36px}.news-tools{grid-template-columns:1fr}.news-page-count{align-self:flex-start}}
+
+/* Portada Gamarra TV inspirada en la estructura editorial de un portal público de televisión, sin copiar su identidad visual */
+.signal-inspired-home{background:#fff}
+.topics-bar{background:#071a35;color:#fff;border-top:1px solid #102d4c;border-bottom:1px solid #dce5ed}
+.topics-inner{min-height:48px;display:flex;align-items:center;gap:20px;overflow:hidden}
+.topics-inner>strong{font-size:12px;white-space:nowrap;color:#21bff1}
+.topics-list{display:flex;gap:22px;overflow:hidden;white-space:nowrap;flex:1}
+.topic-item{font-size:12px;color:#dce8f4;font-weight:700;overflow:hidden;text-overflow:ellipsis;max-width:330px}
+.topic-item:hover{color:#21bff1}.topic-empty{font-size:12px;color:#9fb1c4}
+.home-intro{padding:34px 0 22px;background:#f7f9fb;border-bottom:1px solid #e5ebf1}
+.brand-kicker{font-size:11px;letter-spacing:2px;font-weight:900;color:#0789d6}
+.home-intro h1{font-size:clamp(30px,4vw,48px);line-height:1.03;margin:8px 0 8px;color:#071a35}
+.home-intro p{margin:0;color:#607388;font-size:15px}
+.home-features{background:#f7f9fb;padding:0 0 34px}
+.home-feature-grid{display:grid;grid-template-columns:1.7fr 1fr;gap:16px}
+.home-feature{position:relative;display:block;background:#071a35;overflow:hidden;border-radius:4px;min-height:235px}
+.home-feature-main{min-height:430px}.home-feature-side{display:grid;grid-template-rows:1fr 1fr;gap:16px}.home-feature img{width:100%;height:100%;object-fit:cover}.home-feature:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(3,15,31,.96),rgba(3,15,31,.05) 72%)}
+.home-feature-overlay{position:absolute;z-index:2;left:24px;right:24px;bottom:22px;color:#fff}.home-feature-overlay h2{font-size:clamp(21px,3vw,38px);line-height:1.08;margin:9px 0 8px}.home-feature-side .home-feature-overlay h2{font-size:20px}.home-feature-overlay small{color:#bdd0e1;font-size:11px}
+.latest-home{background:#fff;padding-top:34px}.latest-home .news-card{border-radius:4px}.latest-home .news-image-wrap{height:210px}
+.home-directory{background:#f1f5f8;padding:35px 0 55px}.directory-card{border-top:4px solid #0789d6;background:#fff;padding:28px;display:flex;justify-content:space-between;gap:25px;align-items:center;box-shadow:0 8px 25px rgba(7,26,53,.06)}.directory-card h2{margin:6px 0;font-size:28px;color:#071a35}.directory-card p{margin:0;color:#6b7c8f}.directory-links{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:310px}.directory-links a{padding:12px 14px;border:1px solid #dbe5ed;font-weight:800;font-size:12px;color:#14324f;background:#f9fbfd}.directory-links a:hover{border-color:#0789d6;color:#0789d6}
+@media(max-width:900px){.home-feature-grid{grid-template-columns:1fr}.home-feature-main{min-height:380px}.home-feature-side{grid-template-columns:1fr 1fr;grid-template-rows:auto}.directory-card{flex-direction:column;align-items:flex-start}.directory-links{width:100%;min-width:0}}
+@media(max-width:600px){.topics-inner{gap:12px}.topics-list{gap:14px}.topic-item{max-width:240px}.home-intro{padding:26px 0 20px}.home-feature-main{min-height:330px}.home-feature-side{grid-template-columns:1fr}.home-feature-side .home-feature{min-height:220px}.home-feature-overlay{left:17px;right:17px;bottom:17px}.directory-links{grid-template-columns:1fr}.directory-card{padding:22px}.home-intro h1{font-size:32px}}
