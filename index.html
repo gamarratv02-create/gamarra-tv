@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
   <meta charset="UTF-8">
 
   <meta
@@ -10,24 +12,35 @@
 
   <meta
     name="description"
-    content="Gamarra TV - Noticias, televisión, deportes y actualidad del sur del Cesar y el Magdalena Medio."
+    content="Gamarra TV - Noticias, televisión, deportes y actualidad del sur del Cesar y Magdalena Medio."
   >
 
-  <meta name="theme-color" content="#071d38">
+  <meta
+    name="theme-color"
+    content="#071d3a"
+  >
 
-  <meta property="og:title" content="Gamarra TV | Noticias y Televisión">
+  <meta
+    property="og:title"
+    content="Gamarra TV | Noticias y Televisión"
+  >
+
   <meta
     property="og:description"
-    content="Noticias, televisión, deportes y actualidad."
+    content="Noticias, televisión y actualidad."
   >
+
   <meta
     property="og:image"
     content="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
   >
 
+
   <title>Gamarra TV | Noticias y Televisión</title>
 
-  <!-- Favicon -->
+
+  <!-- FAVICON -->
+
   <link
     rel="icon"
     type="image/png"
@@ -39,7 +52,9 @@
     href="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
   >
 
-  <!-- Fuente -->
+
+  <!-- FUENTES -->
+
   <link
     rel="preconnect"
     href="https://fonts.googleapis.com"
@@ -52,49 +67,78 @@
   >
 
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@600;700;800&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Roboto:wght@400;500;700&display=swap"
     rel="stylesheet"
   >
 
-  <link rel="stylesheet" href="styles.css">
 
-  <!-- Supabase -->
+  <!-- CSS -->
+
+  <link
+    rel="stylesheet"
+    href="styles.css"
+  >
+
+
+  <!-- SUPABASE -->
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- Configuración -->
+
+  <!-- CONFIGURACIÓN -->
+
   <script>
+
     window.__SUPABASE_CONFIG__ = {
-      url: "https://hjexlltqhjdmlwxgptpj.supabase.co",
+
+      url:
+        "https://hjexlltqhjdmlwxgptpj.supabase.co",
 
       /*
-       * PEGA AQUÍ TU PUBLISHABLE KEY DE SUPABASE.
-       *
-       * NO coloques aquí la sb_secret_...
-       */
-      publishableKey: "sb_publishable_tXJAIc_OeskuGOgXB_7pfg_HyVjbGsF",
+        PEGA AQUÍ TU:
+        sb_publishable_...
+
+        NO pongas:
+        sb_secret_...
+      */
+
+      publishableKey:
+        "PEGA_AQUI_TU_PUBLISHABLE_KEY",
+
 
       /*
-       * Si tienes una URL de YouTube Live puedes colocarla aquí.
-       * Déjala vacía si todavía no tienes una.
-       */
-      liveUrl: ""
+        URL DE TU SEÑAL EN VIVO
+
+        Puedes cambiarla por tu enlace de embed.
+      */
+
+      liveUrl:
+        "https://new.opencaster.com/player/embed?user=canaltelefe"
+
     };
+
   </script>
+
 </head>
+
 
 <body>
 
-  <!-- ================= TOPBAR ================= -->
+
+  <!-- =====================================================
+       BARRA SUPERIOR
+       ===================================================== -->
 
   <div class="topbar">
 
-    <div class="container topbar-content">
+    <div class="container topbar-inner">
 
-      <div class="topbar-left">
-        <span>Noticias, televisión y actualidad</span>
+      <div class="topbar-text">
+        Noticias, televisión y actualidad
       </div>
 
-      <div class="topbar-right">
+
+      <div class="social-mini">
 
         <a
           href="https://www.facebook.com/GamarraTelvision"
@@ -135,13 +179,20 @@
   </div>
 
 
-  <!-- ================= HEADER ================= -->
+  <!-- =====================================================
+       HEADER
+       ===================================================== -->
 
   <header class="site-header">
 
-    <div class="container header-content">
+    <div class="container header-main">
 
-      <a href="#/" class="brand">
+
+      <a
+        class="brand"
+        href="#/"
+        aria-label="Gamarra TV"
+      >
 
         <img
           src="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
@@ -152,15 +203,18 @@
 
 
       <button
-        id="menuToggle"
         class="menu-toggle"
+        id="menuToggle"
         aria-label="Abrir menú"
       >
         ☰
       </button>
 
 
-      <nav id="mainNav" class="main-nav">
+      <nav
+        id="mainNav"
+        class="main-nav"
+      >
 
         <a href="#/">Inicio</a>
 
@@ -192,18 +246,19 @@
           Entretenimiento
         </a>
 
-        <a
-          href="#/en-vivo"
-          class="live-button"
-        >
-          <span class="live-dot"></span>
-          En vivo
-        </a>
 
         <a
-          href="#/login"
+          class="live-link"
+          href="#/en-vivo"
+        >
+          🔴 En vivo
+        </a>
+
+
+        <a
+          class="login-link"
           id="authLink"
-          class="login-button"
+          href="#/login"
         >
           🔐 Iniciar sesión
         </a>
@@ -215,37 +270,45 @@
   </header>
 
 
-  <!-- ================= CONTENIDO ================= -->
+  <!-- =====================================================
+       CONTENIDO
+       ===================================================== -->
 
   <main id="app">
 
     <section class="loading-page">
 
-      <div class="loading-spinner"></div>
+      <div class="loader"></div>
 
-      <p>Cargando Gamarra TV...</p>
+      <p>
+        Cargando Gamarra TV...
+      </p>
 
     </section>
 
   </main>
 
 
-  <!-- ================= FOOTER ================= -->
+  <!-- =====================================================
+       FOOTER
+       ===================================================== -->
 
   <footer class="footer">
 
     <div class="container footer-grid">
 
-      <div class="footer-brand">
+
+      <div>
 
         <img
+          class="footer-logo"
           src="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
           alt="Gamarra TV"
         >
 
         <p>
-          Información, televisión y actualidad para Gamarra,
-          el sur del Cesar y el Magdalena Medio.
+          Información, televisión y actualidad para
+          Gamarra, el sur del Cesar y el Magdalena Medio.
         </p>
 
       </div>
@@ -253,25 +316,50 @@
 
       <div>
 
-        <h3>Secciones</h3>
+        <h3>
+          Secciones
+        </h3>
 
-        <a href="#/categoria/gamarra">Gamarra</a>
-        <a href="#/categoria/judicial">Judicial</a>
-        <a href="#/categoria/deportes">Deportes</a>
-        <a href="#/categoria/region">Región</a>
-        <a href="#/categoria/nacionales">Nacionales</a>
+        <a href="#/categoria/gamarra">
+          Gamarra
+        </a>
+
+        <a href="#/categoria/judicial">
+          Judicial
+        </a>
+
+        <a href="#/categoria/deportes">
+          Deportes
+        </a>
+
+        <a href="#/categoria/region">
+          Región
+        </a>
+
+        <a href="#/categoria/nacionales">
+          Nacionales
+        </a>
+
+        <a href="#/categoria/internacionales">
+          Internacionales
+        </a>
+
+        <a href="#/categoria/entretenimiento">
+          Entretenimiento
+        </a>
 
       </div>
 
 
       <div>
 
-        <h3>Síguenos</h3>
+        <h3>
+          Síguenos
+        </h3>
 
         <a
           href="https://www.facebook.com/GamarraTelvision"
           target="_blank"
-          rel="noopener noreferrer"
         >
           Facebook
         </a>
@@ -279,7 +367,6 @@
         <a
           href="https://www.youtube.com/@gamarratvoficial"
           target="_blank"
-          rel="noopener noreferrer"
         >
           YouTube
         </a>
@@ -287,7 +374,6 @@
         <a
           href="https://www.instagram.com/gamarratvoficial/"
           target="_blank"
-          rel="noopener noreferrer"
         >
           Instagram
         </a>
@@ -295,12 +381,12 @@
         <a
           href="https://www.tiktok.com/@gamarratvoficial"
           target="_blank"
-          rel="noopener noreferrer"
         >
           TikTok
         </a>
 
       </div>
+
 
     </div>
 
@@ -315,10 +401,14 @@
   </footer>
 
 
-  <div id="toast" class="toast"></div>
+  <!-- JAVASCRIPT -->
 
+  <script
+    src="app.js"
+    defer
+  ></script>
 
-  <script src="app.js"></script>
 
 </body>
+
 </html>
