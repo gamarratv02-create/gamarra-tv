@@ -568,98 +568,58 @@
 
   async function uploadNewsImage(file) {
     if (!file) return null;
-
-    if (!file.type || !file.type.startsWith("image/")) {
-      throw new Error("El archivo seleccionado no es una imagen válida.");
-    }
-
-    // Evita errores comunes por archivos enormes desde el celular.
-    if (file.size > 15 * 1024 * 1024) {
-      throw new Error("La imagen supera 15 MB. Elige una imagen más liviana.");
-    }
-
-    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-    const userId = state.session?.user?.id || "usuario";
-    const path = `${userId}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const path = `${Date.now()}-${crypto.randomUUID()}.${ext}`;
 
     const { error } = await sb.storage.from("noticias").upload(path, file, {
       cacheControl: "3600",
       upsert: false,
-      contentType: file.type
+      contentType: file.type || "image/jpeg"
     });
 
-    if (error) {
-      throw new Error(`No se pudo subir la imagen: ${error.message}`);
-    }
+    if (error) throw error;
 
     const { data } = sb.storage.from("noticias").getPublicUrl(path);
-    if (!data?.publicUrl) throw new Error("Supabase no devolvió la URL pública de la imagen.");
     return data.publicUrl;
   }
 
-  function formatSupabaseError(error) {
-    if (!error) return "Ocurrió un error desconocido.";
-    const parts = [error.message, error.details, error.hint, error.code ? `Código: ${error.code}` : ""]
-      .filter(Boolean);
-    return parts.join(" | ");
+  function makeSlug(text = "") {
+    const base = String(text)
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80) || "noticia";
+    return `${base}-${Date.now()}`;
   }
 
   async function publishNews(event) {
     event.preventDefault();
-
-    if (!state.session) {
-      notify("Tu sesión no está activa. Inicia sesión nuevamente.", "error");
-      location.hash = "#/login";
-      return;
-    }
-
     const form = event.target;
     const fd = new FormData(form);
-    const id = String(fd.get("noticia_id") || "").trim();
+    const id = fd.get("noticia_id");
     const titulo = String(fd.get("titulo") || "").trim();
-    const categoria = String(fd.get("categoria") || "gamarra").trim().toLowerCase();
+    const categoria = String(fd.get("categoria") || "gamarra").trim();
     const resumen = String(fd.get("resumen") || "").trim();
     const contenido = String(fd.get("contenido") || "").trim();
     const publicada = fd.get("publicada") === "on";
-    const file = form.elements.imagen?.files?.[0] || null;
+    const file = form.elements.imagen.files?.[0];
+
     const alert = document.getElementById("newsAdminAlert");
-    const button = form.querySelector('button[type="submit"]');
-
-    if (!titulo || !contenido) {
-      alert.innerHTML = `<div class="alert alert-error">Escribe el título y el contenido de la noticia.</div>`;
-      return;
-    }
-
-    if (!categoria) {
-      alert.innerHTML = `<div class="alert alert-error">Selecciona una categoría.</div>`;
-      return;
-    }
-
-    if (button) button.disabled = true;
     alert.innerHTML = `<div class="alert alert-success">Guardando noticia...</div>`;
 
     try {
       let imagenUrl = null;
-      let imageWarning = "";
-
-      // Si la imagen falla, NO bloqueamos la publicación de la noticia.
-      // Así puedes publicar primero y corregir la imagen después.
-      if (file) {
-        try {
-          imagenUrl = await uploadNewsImage(file);
-        } catch (imageError) {
-          console.error("Error de Storage:", imageError);
-          imageWarning = ` La noticia se guardará sin imagen porque: ${formatSupabaseError(imageError)}`;
-        }
-      }
-
+      if (file) imagenUrl = await uploadNewsImage(file);
       if (!imagenUrl && id) {
-        const old = state.news.find(n => String(n.id) === id);
+        const old = state.news.find(n => String(n.id) === String(id));
         imagenUrl = old?.imagen_url || null;
       }
 
       const payload = {
         titulo,
+        slug: id ? makeSlug(titulo) : makeSlug(titulo),
         resumen: resumen || null,
         contenido,
         imagen_url: imagenUrl,
@@ -669,27 +629,19 @@
 
       let result;
       if (id) {
-        result = await sb.from("noticias")
-          .update(payload)
-          .eq("id", id);
+        result = await sb.from("noticias").update(payload).eq("id", id);
       } else {
-        result = await sb.from("noticias")
-          .insert(payload);
+        result = await sb.from("noticias").insert(payload);
       }
 
-      if (result.error) {
-        throw new Error(formatSupabaseError(result.error));
-      }
+      if (result.error) throw result.error;
 
-      alert.innerHTML = `<div class="alert alert-success">✅ Noticia ${id ? "actualizada" : "publicada"} correctamente.${esc(imageWarning)}</div>`;
+      alert.innerHTML = `<div class="alert alert-success">Noticia guardada correctamente.</div>`;
       resetNewsForm();
       await loadAdminData();
     } catch (error) {
-      const message = formatSupabaseError(error);
-      alert.innerHTML = `<div class="alert alert-error">❌ No se pudo guardar la noticia.<br><small>${esc(message)}</small></div>`;
-      console.error("Error al publicar noticia:", error);
-    } finally {
-      if (button) button.disabled = false;
+      alert.innerHTML = `<div class="alert alert-error">${esc(error.message)}</div>`;
+      console.error(error);
     }
   }
 
