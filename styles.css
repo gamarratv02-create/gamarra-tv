@@ -138,3 +138,81 @@
 .live-fallback iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
 .live-fallback .btn{position:relative;z-index:6}
 @media(max-width:700px){.player,.player>video{min-height:230px}.live-fallback strong{font-size:15px}.live-fallback p{font-size:13px}}
+
+
+/* FIX DEFINITIVO: evitar movimiento/desbordamiento horizontal en PC y celulares */
+html, body {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  overflow-x: hidden;
+}
+body {
+  position: relative;
+  overscroll-behavior-x: none;
+}
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+img, video, iframe, canvas, svg {
+  max-width: 100%;
+}
+.container, .topbar-in, .header-in, main, section, footer {
+  max-width: 100%;
+}
+
+/* Los elementos de grid/flex no pueden obligar al documento a crecer */
+.hero-grid > *, .features > *, .live-layout > *, .home-feature-grid > *,
+.home-feature-side > *, .form-grid > *, .contact-layout > *, .weather-current > *,
+.footer-grid > *, .services-grid > *, .clients-grid > *, .category-news-grid > * {
+  min-width: 0;
+}
+
+/* Textos y URLs largas deben partirse en pantallas pequeñas */
+p, h1, h2, h3, h4, h5, h6, a, span, strong, small, label, button, input, textarea, select {
+  overflow-wrap: anywhere;
+}
+
+input, textarea, select, button {
+  max-width: 100%;
+}
+
+.player, .player iframe, .player video {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Carruseles: solo ellos pueden desplazarse horizontalmente; nunca el documento */
+.news-carousel, .category-strip, .topics-list {
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+}
+
+@media (max-width: 600px) {
+  html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  .container {
+    width: calc(100% - 22px);
+    max-width: calc(100% - 22px);
+  }
+  .header, .topbar, .breaking, .hero, .section, .live-section,
+  .home-intro, .home-features, .latest-home, .home-directory,
+  .services-section, .clients-section, .news-page, .contact-page,
+  .weather-page, .article, .admin, .login-page, .footer {
+    width: 100%;
+    max-width: 100%;
+  }
+  .home-feature, .hero-main, .feature, .news-card, .service-card,
+  .client-card, .panel, .schedule, .contact-main, .contact-side,
+  .news-page-hero, .directory-card {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .home-feature img, .hero-main img, .feature img, .news-image-wrap img,
+  .client-logo img, .article img.main-image {
+    max-width: 100%;
+  }
+}
