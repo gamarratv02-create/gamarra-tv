@@ -39,6 +39,39 @@ function live(){
  }).join(''):'<div class="empty">No hay programación publicada para este día.</div>';
  return `<section class="live-section"><div class="container"><div class="live-title"><div><span class="live-kicker">GTV MEDIOS</span><h2>Gamarra TV <b>EN VIVO</b></h2></div><span class="live-pill"><i></i> SEÑAL EN DIRECTO</span></div><div class="live-layout"><div class="player-column"><div class="player"><iframe src="${esc(C.liveUrl||'')}" title="Señal en vivo de Gamarra TV" allow="autoplay;fullscreen" allowfullscreen></iframe><div class="player-label"><i></i> GTV EN VIVO</div></div><div class="live-note">Señal abierta de Gamarra TV</div></div><aside class="schedule"><div class="schedule-head"><div><span>HOY EN GTV</span><h3>PROGRAMACIÓN</h3></div><span class="schedule-day">${esc(dayInfo(d)[1])}</span></div><div class="days">${DAYS.map(x=>`<button class="day ${d===x[0]?'active':''}" data-day="${x[0]}">${x[1]}</button>`).join('')}</div><div class="schedule-list">${rowsHtml}</div><div class="next-box">${next?`<span>PRÓXIMO</span><strong>${esc(next.programa)}</strong><small>${esc(time(next.hora_inicio||next.hora))}</small>`:`<span>PROGRAMACIÓN</span><strong>${current?'Al aire en este momento':'Fuera de programación'}</strong>`}</div></aside></div></div></section>`
 }
+function newsPage(initialCat=''){
+ setMeta();
+ const selected=String(initialCat||'').toLowerCase();
+ app.innerHTML=`<section class="news-page"><div class="container">
+   <div class="news-page-hero"><div><span class="kicker">GTV NOTICIAS</span><h1>Noticias</h1><p>Encuentra todas las noticias de Gamarra TV en un solo lugar.</p></div><div class="news-page-count" id="newsCount">${S.news.length} noticias</div></div>
+   <div class="news-tools">
+    <div class="news-search-box"><span>🔎</span><input id="newsSearch" type="search" placeholder="Buscar noticias, temas o palabras clave..." autocomplete="off"></div>
+    <div class="news-filter"><label for="newsCategory">CATEGORÍA</label><select id="newsCategory"><option value="">Todas las categorías</option>${CATS.map(x=>`<option value="${x}" ${selected===x?'selected':''}>${esc(categoryLabel(x))}</option>`).join('')}</select></div>
+   </div>
+   <div class="news-category-chips" id="newsChips"><button class="news-chip active" data-cat="">Todas</button>${CATS.map(x=>`<button class="news-chip" data-cat="${x}">${esc(categoryLabel(x))}</button>`).join('')}</div>
+   <div class="category-news-grid news-search-grid" id="newsResults"></div>
+ </div></section>`;
+ const input=document.getElementById('newsSearch'),select=document.getElementById('newsCategory'),results=document.getElementById('newsResults'),count=document.getElementById('newsCount');
+ const chips=[...document.querySelectorAll('.news-chip')];
+ let activeCat=selected;
+ function paint(){
+   const term=String(input.value||'').trim().toLowerCase();
+   const filtered=S.news.filter(n=>{
+     const cat=String(n.categoria||'').toLowerCase();
+     if(activeCat&&cat!==activeCat)return false;
+     if(!term)return true;
+     return [n.titulo,n.resumen,n.contenido,n.categoria].some(v=>String(v||'').toLowerCase().includes(term));
+   });
+   results.innerHTML=filtered.length?filtered.map(card).join(''):`<div class="empty news-empty"><h2>No encontramos noticias</h2><p>Prueba con otra palabra o selecciona otra categoría.</p></div>`;
+   count.textContent=`${filtered.length} ${filtered.length===1?'noticia':'noticias'}`;
+   select.value=activeCat;
+   chips.forEach(c=>c.classList.toggle('active',c.dataset.cat===activeCat));
+ }
+ input.oninput=paint;
+ select.onchange=()=>{activeCat=select.value;paint()};
+ chips.forEach(ch=>ch.onclick=()=>{activeCat=ch.dataset.cat;paint()});
+ paint();
+}
 function homeSections(){return `<section class="section category-sections"><div class="container">${CATS.map(cat=>{const items=S.news.filter(n=>String(n.categoria||'').toLowerCase()===cat).slice(0,4);if(!items.length)return '';return `<div class="news-category-section"><div class="section-head compact"><div><span class="kicker">GTV NOTICIAS</span><h2>${esc(categoryLabel(cat))}</h2></div><a class="section-more" href="#/categoria/${cat}">Ver todas →</a></div><div class="section-news-grid">${items.map(card).join('')}</div></div>`}).join('')}</div></section>`}
 function bindHome(){bindLive();const p=document.getElementById('prev'),n=document.getElementById('next'),c=document.getElementById('carousel');if(p)p.onclick=()=>c.scrollBy({left:-390,behavior:'smooth'});if(n)n.onclick=()=>c.scrollBy({left:390,behavior:'smooth'});const first=S.news[0];if(first)document.getElementById('breakingText').textContent=first.titulo}
 function bindLive(){document.querySelectorAll('.day').forEach(b=>b.onclick=()=>{S.day=b.dataset.day;render()})}
@@ -176,6 +209,6 @@ function weatherInfo(code){
  const m={0:['☀️','Despejado'],1:['🌤️','Mayormente despejado'],2:['⛅','Parcialmente nublado'],3:['☁️','Nublado'],45:['🌫️','Niebla'],48:['🌫️','Niebla'],51:['🌦️','Llovizna'],53:['🌦️','Llovizna'],55:['🌧️','Llovizna intensa'],61:['🌧️','Lluvia'],63:['🌧️','Lluvia moderada'],65:['🌧️','Lluvia intensa'],71:['🌨️','Nieve'],73:['🌨️','Nieve moderada'],75:['❄️','Nieve intensa'],80:['🌦️','Chubascos'],81:['🌧️','Chubascos'],82:['⛈️','Chubascos fuertes'],95:['⛈️','Tormenta'],96:['⛈️','Tormenta con granizo'],99:['⛈️','Tormenta con granizo']};const x=m[code]||['🌡️','Condición variable'];return{icon:x[0],label:x[1]}}
 function formatForecastDay(dateStr){return new Intl.DateTimeFormat('es-CO',{weekday:'short',day:'2-digit'}).format(new Date(dateStr+'T12:00:00')).toUpperCase().replace('.','')}
 
-async function render(){const hash=location.hash||'#/';try{if(hash.startsWith('#/noticia/')){return article(decodeURIComponent(hash.slice(10)))}if(hash==='#/login')return login();if(hash==='#/admin')return admin();if(hash==='#/contacto')return contact();if(hash==='#/clima')return weatherPage();const cat=hash.startsWith('#/categoria/')?decodeURIComponent(hash.slice(12)).toLowerCase():null;if(hash==='#/en-vivo'||hash==='#/programacion'){setMeta();await loadPrograms();app.innerHTML=live();bindLive();return}setMeta();await loadNews(cat);if(cat){app.innerHTML=`<section class="section category-page"><div class="container"><span class="kicker">GTV NOTICIAS</span><h1>${esc(categoryLabel(cat))}</h1><p class="section-subtitle">Noticias publicadas en la categoría ${esc(categoryLabel(cat))}.</p><div class="category-news-grid">${S.news.map(card).join('')}</div></div></section>`}else{await loadPrograms();S.day=null;app.innerHTML=home();bindHome()}}catch(e){console.error(e);app.innerHTML=`<div class="error-box"><h2>No se pudo cargar el contenido</h2><p>${esc(e.message||e)}</p><a class="back-link" href="#/">← Volver al inicio</a></div>`}}
+async function render(){const hash=location.hash||'#/';try{if(hash.startsWith('#/noticia/')){return article(decodeURIComponent(hash.slice(10)))}if(hash==='#/login')return login();if(hash==='#/admin')return admin();if(hash==='#/contacto')return contact();if(hash==='#/clima')return weatherPage();const cat=hash.startsWith('#/categoria/')?decodeURIComponent(hash.slice(12)).toLowerCase():null;if(hash==='#/noticias'||cat){await loadNews();return newsPage(cat||'')}if(hash==='#/en-vivo'||hash==='#/programacion'){setMeta();await loadPrograms();app.innerHTML=live();bindLive();return}setMeta();await loadNews();await loadPrograms();S.day=null;app.innerHTML=home();bindHome()}catch(e){console.error(e);app.innerHTML=`<div class="error-box"><h2>No se pudo cargar el contenido</h2><p>${esc(e.message||e)}</p><a class="back-link" href="#/">← Volver al inicio</a></div>`}}
 sb.auth.onAuthStateChange(()=>setTimeout(session,0));window.addEventListener('hashchange',render);setInterval(()=>{if(location.hash==='#/en-vivo'||location.hash==='#/programacion'||location.hash===''||location.hash==='#/')render()},60000);(async()=>{await session();await render()})();
 })();
