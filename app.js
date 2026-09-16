@@ -1,2119 +1,3071 @@
-/* =====================================================
+/* =========================================================
    GAMARRA TV
-   APP PRINCIPAL
-===================================================== */
+   Aplicación principal
+   ========================================================= */
+
+(() => {
+
+  "use strict";
 
 
-/* =====================================================
-   CONFIGURACIÓN SUPABASE
-===================================================== */
+  /* =========================================================
+     CONFIGURACIÓN
+     ========================================================= */
 
-const SUPABASE_URL =
-    "https://hjexlltqhjdm1wxgptpj.supabase.co";
+  const CONFIG = window.__SUPABASE_CONFIG__ || {};
 
-/*
-   sb_publishable_tXJAIc_OeskuGOgXB_7pfg_HyVjbGsF.
+  const app = document.getElementById("app");
 
-   NO pongas la SECRET KEY.
-*/
+  const authLink = document.getElementById("authLink");
 
-const SUPABASE_PUBLISHABLE_KEY =
-    "sb_publishable_tXJAIc_OeskuGOgXB_7pfg_HyVjbGsF";
+  const menuToggle = document.getElementById("menuToggle");
 
+  const mainNav = document.getElementById("mainNav");
 
-const supabaseClient =
-    window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_PUBLISHABLE_KEY,
-        {
-            auth: {
-                persistSession: true,
-                autoRefreshToken: true,
-                detectSessionInUrl: true
-            }
-        }
-    );
+  let sb = null;
 
 
-/* =====================================================
-   VARIABLES
-===================================================== */
-
-const app =
-    document.getElementById("app");
-
-const menuToggle =
-    document.getElementById("menuToggle");
-
-const mainNav =
-    document.getElementById("mainNav");
+  const CATEGORIES = [
+    "gamarra",
+    "judicial",
+    "deportes",
+    "region",
+    "nacionales",
+    "internacionales",
+    "entretenimiento"
+  ];
 
 
-/* =====================================================
-   MENÚ
-===================================================== */
-
-if (menuToggle) {
-
-    menuToggle.addEventListener(
-        "click",
-        () => {
-
-            mainNav.classList.toggle("open");
-
-        }
-    );
-
-}
+  const CATEGORY_NAMES = {
+    gamarra: "Gamarra",
+    judicial: "Judicial",
+    deportes: "Deportes",
+    region: "Región",
+    nacionales: "Nacionales",
+    internacionales: "Internacionales",
+    entretenimiento: "Entretenimiento"
+  };
 
 
-/* =====================================================
-   UTILIDADES
-===================================================== */
+  const DAYS = {
+    lunes: 1,
+    martes: 2,
+    miercoles: 3,
+    miércoles: 3,
+    jueves: 4,
+    viernes: 5,
+    sabado: 6,
+    sábado: 6,
+    domingo: 7
+  };
 
-function escapeHTML(value) {
 
-    if (value === null ||
-        value === undefined) {
+  const state = {
 
-        return "";
+    news: [],
 
+    programs: [],
+
+    editingNewsId: null,
+
+    editingProgramId: null
+
+  };
+
+
+  /* =========================================================
+     UTILIDADES
+     ========================================================= */
+
+  function escapeHTML(value) {
+
+    if (value === null || value === undefined) {
+      return "";
     }
 
     return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 
 
-function formatDate(date) {
+  function imageURL(url) {
+
+    if (url && String(url).trim()) {
+      return escapeHTML(url);
+    }
+
+    return "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80";
+  }
+
+
+  function categoryName(category) {
+
+    return CATEGORY_NAMES[category] ||
+      String(category || "Noticias");
+  }
+
+
+  function formatDate(date) {
 
     if (!date) {
-        return "";
+      return "";
     }
-
-    return new Date(date)
-        .toLocaleDateString(
-            "es-CO",
-            {
-                day: "numeric",
-                month: "long",
-                year: "numeric"
-            }
-        );
-}
-
-
-function imageOrDefault(url) {
-
-    return url ||
-        "https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png";
-
-}
-
-
-function showError(message) {
-
-    app.innerHTML = `
-        <div class="container section">
-            <div class="alert alert-error">
-                ${escapeHTML(message)}
-            </div>
-        </div>
-    `;
-
-}
-
-
-function showLoading() {
-
-    app.innerHTML = `
-        <div class="loading">
-
-            <div class="spinner"></div>
-
-            <p>
-                Cargando Gamarra TV...
-            </p>
-
-        </div>
-    `;
-
-}
-
-
-/* =====================================================
-   OBTENER NOTICIAS
-===================================================== */
-
-async function getNoticias(limit = 30) {
-
-    const {
-        data,
-        error
-    } = await supabaseClient
-        .from("noticias")
-        .select("*")
-        .eq("publicada", true)
-        .order(
-            "fecha_publicacion",
-            {
-                ascending: false
-            }
-        )
-        .limit(limit);
-
-    if (error) {
-
-        console.error(error);
-
-        throw new Error(
-            "No fue posible cargar las noticias: " +
-            error.message
-        );
-
-    }
-
-    return data || [];
-}
-
-
-/* =====================================================
-   INICIO
-===================================================== */
-
-async function renderHome() {
-
-    showLoading();
 
     try {
 
-        const noticias =
-            await getNoticias(30);
+      return new Intl.DateTimeFormat("es-CO", {
+        dateStyle: "long"
+      }).format(new Date(date));
 
-        const programacion =
-            await getProgramacion();
+    } catch {
 
-        if (!noticias.length) {
+      return "";
 
-            app.innerHTML = `
-                <section class="section">
+    }
 
-                    <div class="container">
+  }
 
-                        <div class="alert alert-success">
 
-                            Todavía no hay noticias
-                            publicadas.
+  function getHashRoute() {
 
-                        </div>
+    let route = location.hash || "#/";
 
-                    </div>
+    if (route.startsWith("#")) {
+      route = route.substring(1);
+    }
 
-                </section>
-            `;
+    if (!route) {
+      route = "/";
+    }
 
-            return;
+    if (!route.startsWith("/")) {
+      route = "/" + route;
+    }
+
+    return route;
+
+  }
+
+
+  function showToast(message) {
+
+    const toast = document.getElementById("toast");
+
+    if (!toast) {
+      return;
+    }
+
+    toast.textContent = message;
+
+    toast.classList.add("show");
+
+    setTimeout(() => {
+
+      toast.classList.remove("show");
+
+    }, 3000);
+
+  }
+
+
+  function showError(message) {
+
+    return `
+      <div class="alert alert-error">
+        ${escapeHTML(message)}
+      </div>
+    `;
+
+  }
+
+
+  function showSuccess(message) {
+
+    return `
+      <div class="alert alert-success">
+        ${escapeHTML(message)}
+      </div>
+    `;
+
+  }
+
+
+  function closeMobileMenu() {
+
+    if (mainNav) {
+      mainNav.classList.remove("open");
+    }
+
+  }
+
+
+  /* =========================================================
+     CONFIGURACIÓN SUPABASE
+     ========================================================= */
+
+  function initSupabase() {
+
+    if (!window.supabase) {
+
+      app.innerHTML = `
+        <section class="section">
+          <div class="container">
+            ${showError(
+              "No se pudo cargar Supabase. Recarga la página."
+            )}
+          </div>
+        </section>
+      `;
+
+      return false;
+
+    }
+
+
+    if (
+      !CONFIG.url ||
+      !CONFIG.publishableKey ||
+      CONFIG.publishableKey.includes("sb_publishable_tXJAIc_OeskuGOgXB_7pfg_HyVjbGsF")
+    ) {
+
+      app.innerHTML = `
+        <section class="section">
+          <div class="container">
+
+            <div class="admin-card">
+
+              <h2>Configuración pendiente</h2>
+
+              <p>
+                La página ya está funcionando, pero falta colocar
+                la Publishable Key de Supabase.
+              </p>
+
+              <div class="alert alert-info">
+                Abre <strong>index.html</strong> y coloca tu
+                <strong>sb_publishable_...</strong> en
+                <strong>publishableKey</strong>.
+              </div>
+
+              <p>
+                No coloques la clave
+                <strong>sb_secret_...</strong> en este archivo.
+              </p>
+
+            </div>
+
+          </div>
+        </section>
+      `;
+
+      return false;
+
+    }
+
+
+    sb = window.supabase.createClient(
+      CONFIG.url,
+      CONFIG.publishableKey,
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true
+        }
+      }
+    );
+
+
+    return true;
+
+  }
+
+
+  /* =========================================================
+     AUTENTICACIÓN
+     ========================================================= */
+
+  async function getSession() {
+
+    if (!sb) {
+      return null;
+    }
+
+    const {
+      data
+    } = await sb.auth.getSession();
+
+    return data?.session || null;
+
+  }
+
+
+  async function updateAuthButton() {
+
+    if (!authLink) {
+      return;
+    }
+
+    const session = await getSession();
+
+    if (session) {
+
+      authLink.href = "#/admin";
+
+      authLink.innerHTML = "⚙️ Panel";
+
+    } else {
+
+      authLink.href = "#/login";
+
+      authLink.innerHTML = "🔐 Iniciar sesión";
+
+    }
+
+  }
+
+
+  /* =========================================================
+     NOTICIAS
+     ========================================================= */
+
+  async function getPublishedNews(limit = 12) {
+
+    const {
+      data,
+      error
+    } = await sb
+      .from("noticias")
+      .select("*")
+      .eq("publicada", true)
+      .order("created_at", {
+        ascending: false
+      })
+      .limit(limit);
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    return data || [];
+
+  }
+
+
+  async function getCategoryNews(category) {
+
+    const {
+      data,
+      error
+    } = await sb
+      .from("noticias")
+      .select("*")
+      .eq("publicada", true)
+      .eq("categoria", category)
+      .order("created_at", {
+        ascending: false
+      })
+      .limit(30);
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    return data || [];
+
+  }
+
+
+  async function getNewsById(id) {
+
+    const {
+      data,
+      error
+    } = await sb
+      .from("noticias")
+      .select("*")
+      .eq("id", id)
+      .eq("publicada", true)
+      .maybeSingle();
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    return data;
+
+  }
+
+
+  /* =========================================================
+     PROGRAMACIÓN
+     ========================================================= */
+
+  async function getPrograms(activeOnly = true) {
+
+    let query = sb
+      .from("programacion")
+      .select("*");
+
+
+    if (activeOnly) {
+
+      query = query.eq("activo", true);
+
+    }
+
+
+    const {
+      data,
+      error
+    } = await query;
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    const programs = data || [];
+
+
+    programs.sort((a, b) => {
+
+      const dayA =
+        DAYS[String(a.dia || "").toLowerCase()] || 99;
+
+      const dayB =
+        DAYS[String(b.dia || "").toLowerCase()] || 99;
+
+
+      if (dayA !== dayB) {
+        return dayA - dayB;
+      }
+
+
+      return String(a.hora || "")
+        .localeCompare(String(b.hora || ""));
+
+    });
+
+
+    return programs;
+
+  }
+
+
+  /* =========================================================
+     TARJETA DE NOTICIA
+     ========================================================= */
+
+  function newsCard(news) {
+
+    return `
+      <article class="news-card">
+
+        <a href="#/noticia/${encodeURIComponent(news.id)}">
+
+          <img
+            class="news-image"
+            src="${imageURL(news.imagen_url)}"
+            alt="${escapeHTML(news.titulo)}"
+            loading="lazy"
+          >
+
+        </a>
+
+        <div class="news-body">
+
+          <div class="news-meta">
+            ${escapeHTML(categoryName(news.categoria))}
+            ${news.created_at ? " · " + escapeHTML(formatDate(news.created_at)) : ""}
+          </div>
+
+          <h3>
+
+            <a href="#/noticia/${encodeURIComponent(news.id)}">
+
+              ${escapeHTML(news.titulo)}
+
+            </a>
+
+          </h3>
+
+          ${
+            news.resumen
+              ? `<p>${escapeHTML(news.resumen)}</p>`
+              : ""
+          }
+
+        </div>
+
+      </article>
+    `;
+
+  }
+
+
+  /* =========================================================
+     PROGRAMACIÓN CARD
+     ========================================================= */
+
+  function programCard(program) {
+
+    return `
+      <div class="schedule-card">
+
+        <div class="schedule-day">
+          ${escapeHTML(program.dia || "")}
+        </div>
+
+        <div class="schedule-time">
+          ${escapeHTML(program.hora || "")}
+        </div>
+
+        <h3>
+          ${escapeHTML(program.programa || "Programa")}
+        </h3>
+
+        ${
+          program.descripcion
+            ? `<p>${escapeHTML(program.descripcion)}</p>`
+            : ""
         }
 
+      </div>
+    `;
 
-        const principal =
-            noticias[0];
+  }
 
-        const restantes =
-            noticias.slice(1);
 
+  /* =========================================================
+     PÁGINA INICIO
+     ========================================================= */
+
+  async function renderHome() {
+
+    app.innerHTML = `
+      <section class="loading-page">
+        <div class="loading-spinner"></div>
+        <p>Cargando las últimas noticias...</p>
+      </section>
+    `;
+
+
+    let news = [];
+
+    let programs = [];
+
+
+    try {
+
+      news = await getPublishedNews(12);
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+
+    try {
+
+      programs = await getPrograms(true);
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+
+    const mainNews = news[0];
+
+    const secondaryNews = news.slice(1, 4);
+
+    const latestNews = news.slice(0, 9);
+
+
+    app.innerHTML = `
+
+      <!-- HERO -->
+
+      <section class="hero">
+
+        <div class="container">
+
+          <div class="hero-grid">
+
+            ${
+              mainNews
+                ? `
+                  <article class="hero-main">
+
+                    <img
+                      src="${imageURL(mainNews.imagen_url)}"
+                      alt="${escapeHTML(mainNews.titulo)}"
+                    >
+
+                    <div class="hero-overlay">
+
+                      <div class="hero-info">
+
+                        <span class="category-label">
+                          ${escapeHTML(categoryName(mainNews.categoria))}
+                        </span>
+
+                        <h1>
+                          ${escapeHTML(mainNews.titulo)}
+                        </h1>
+
+                        ${
+                          mainNews.resumen
+                            ? `<p>${escapeHTML(mainNews.resumen)}</p>`
+                            : ""
+                        }
+
+                      </div>
+
+                    </div>
+
+                    <a
+                      href="#/noticia/${encodeURIComponent(mainNews.id)}"
+                      style="position:absolute;inset:0"
+                      aria-label="Leer noticia"
+                    ></a>
+
+                  </article>
+                `
+                : `
+                  <div class="hero-main">
+
+                    <div class="hero-info">
+
+                      <span class="category-label">
+                        GAMARRA TV
+                      </span>
+
+                      <h1>
+                        Noticias, televisión y actualidad
+                      </h1>
+
+                      <p>
+                        Información del sur del Cesar y el Magdalena Medio.
+                      </p>
+
+                    </div>
+
+                  </div>
+                `
+            }
+
+
+            <div class="featured-column">
+
+              ${
+                secondaryNews.length
+                  ? secondaryNews
+                      .map(item => `
+                        <article class="feature-card">
+
+                          <a href="#/noticia/${encodeURIComponent(item.id)}">
+
+                            <img
+                              src="${imageURL(item.imagen_url)}"
+                              alt="${escapeHTML(item.titulo)}"
+                            >
+
+                          </a>
+
+                          <div class="feature-content">
+
+                            <div class="news-meta">
+                              ${escapeHTML(categoryName(item.categoria))}
+                            </div>
+
+                            <h3>
+                              <a href="#/noticia/${encodeURIComponent(item.id)}">
+                                ${escapeHTML(item.titulo)}
+                              </a>
+                            </h3>
+
+                          </div>
+
+                        </article>
+                      `)
+                      .join("")
+                  : `
+                    <div class="empty">
+                      Pronto encontrarás aquí más noticias destacadas.
+                    </div>
+                  `
+              }
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- ÚLTIMAS NOTICIAS -->
+
+      <section class="section">
+
+        <div class="container">
+
+          <div class="section-header">
+
+            <div>
+
+              <h2 class="section-title">
+                Últimas noticias
+              </h2>
+
+              <p class="section-subtitle">
+                La información más reciente de Gamarra TV.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          ${
+            latestNews.length
+              ? `
+                <div class="news-grid">
+
+                  ${latestNews.map(newsCard).join("")}
+
+                </div>
+              `
+              : `
+                <div class="empty">
+
+                  <h3>
+                    Aún no hay noticias publicadas
+                  </h3>
+
+                  <p>
+                    Cuando publiques una noticia desde el panel,
+                    aparecerá automáticamente aquí.
+                  </p>
+
+                </div>
+              `
+          }
+
+        </div>
+
+      </section>
+
+
+      <!-- EN VIVO -->
+
+      <section class="section live-section">
+
+        <div class="container">
+
+          <div class="section-header">
+
+            <div>
+
+              <h2 class="section-title">
+                🔴 Gamarra TV en vivo
+              </h2>
+
+              <p class="section-subtitle" style="color:#b8c4d4">
+                Disfruta nuestra señal y programación.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="live-box">
+
+            <div class="live-player">
+
+              ${
+                CONFIG.liveUrl
+                  ? `
+                    <iframe
+                      src="${escapeHTML(CONFIG.liveUrl)}"
+                      allow="autoplay; encrypted-media"
+                      allowfullscreen
+                    ></iframe>
+                  `
+                  : `
+                    <div class="live-icon">
+                      📺
+                    </div>
+
+                    <h2>
+                      Gamarra TV
+                    </h2>
+
+                    <p>
+                      Nuestra señal en vivo estará disponible aquí.
+                    </p>
+
+                    <a
+                      href="#/en-vivo"
+                      class="btn btn-primary"
+                    >
+                      Ver señal en vivo
+                    </a>
+                  `
+              }
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- PROGRAMACIÓN -->
+
+      <section class="section">
+
+        <div class="container">
+
+          <div class="section-header">
+
+            <div>
+
+              <h2 class="section-title">
+                Programación
+              </h2>
+
+              <p class="section-subtitle">
+                Consulta los programas disponibles en Gamarra TV.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          ${
+            programs.length
+              ? `
+                <div class="schedule">
+
+                  ${programs.slice(0, 8).map(programCard).join("")}
+
+                </div>
+              `
+              : `
+                <div class="empty">
+
+                  La programación aparecerá aquí cuando sea
+                  configurada desde el panel.
+
+                </div>
+              `
+          }
+
+        </div>
+
+      </section>
+
+    `;
+
+  }
+
+
+  /* =========================================================
+     CATEGORÍA
+     ========================================================= */
+
+  async function renderCategory(category) {
+
+    const name = categoryName(category);
+
+
+    app.innerHTML = `
+      <section class="category-header">
+
+        <div class="container">
+
+          <h1>
+            ${escapeHTML(name)}
+          </h1>
+
+          <p>
+            Noticias de ${escapeHTML(name)} y sus alrededores.
+          </p>
+
+        </div>
+
+      </section>
+
+      <section class="section">
+
+        <div class="container">
+
+          <div id="categoryContent">
+
+            <div class="loading-page">
+              <div class="loading-spinner"></div>
+              <p>Cargando noticias...</p>
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+    `;
+
+
+    try {
+
+      const news = await getCategoryNews(category);
+
+
+      document.getElementById("categoryContent").innerHTML =
+
+        news.length
+          ? `
+              <div class="news-grid">
+
+                ${news.map(newsCard).join("")}
+
+              </div>
+            `
+          : `
+              <div class="empty">
+
+                <h3>
+                  No hay noticias en esta sección
+                </h3>
+
+                <p>
+                  Todavía no hay publicaciones disponibles.
+                </p>
+
+              </div>
+            `;
+
+    } catch (error) {
+
+      console.error(error);
+
+      document.getElementById("categoryContent").innerHTML =
+        showError(
+          "No fue posible cargar las noticias de esta sección."
+        );
+
+    }
+
+  }
+
+
+  /* =========================================================
+     ARTÍCULO
+     ========================================================= */
+
+  async function renderArticle(id) {
+
+    app.innerHTML = `
+      <section class="loading-page">
+
+        <div class="loading-spinner"></div>
+
+        <p>Cargando noticia...</p>
+
+      </section>
+    `;
+
+
+    try {
+
+      const news = await getNewsById(id);
+
+
+      if (!news) {
 
         app.innerHTML = `
+          <section class="section">
 
-            <!-- HERO -->
+            <div class="container">
 
-            <section class="hero">
+              <div class="empty">
 
-                <div class="container hero-grid">
+                <h2>
+                  Noticia no encontrada
+                </h2>
 
-                    <article
-                        class="hero-main"
-                        onclick="location.hash='#/noticia/${principal.id}'"
-                        style="cursor:pointer">
+                <p>
+                  La noticia puede haber sido retirada o no existe.
+                </p>
 
-                        <img
-                            src="${escapeHTML(
-                                imageOrDefault(
-                                    principal.imagen_url
-                                )
-                            )}"
-                            alt="${escapeHTML(
-                                principal.titulo
-                            )}">
+                <a href="#/" class="btn btn-primary">
+                  Volver al inicio
+                </a>
 
-                        <div class="hero-overlay">
+              </div>
 
-                            <span class="hero-category">
+            </div>
 
-                                ${escapeHTML(
-                                    principal.categoria ||
-                                    "Noticias"
-                                )}
+          </section>
+        `;
 
-                            </span>
+        return;
 
-                            <h1>
-
-                                ${escapeHTML(
-                                    principal.titulo
-                                )}
-
-                            </h1>
-
-                        </div>
-
-                    </article>
+      }
 
 
-                    <aside class="program-card">
-
-                        <h2>
-                            📺 Programación
-                        </h2>
-
-                        ${renderProgramacion(
-                            programacion
-                        )}
-
-                    </aside>
-
-                </div>
-
-            </section>
+      const paragraphs =
+        String(news.contenido || "")
+          .split(/\n+/)
+          .filter(Boolean)
+          .map(
+            paragraph =>
+              `<p>${escapeHTML(paragraph)}</p>`
+          )
+          .join("");
 
 
-            <!-- ÚLTIMAS NOTICIAS -->
+      app.innerHTML = `
 
-            <section class="section">
+        <article class="article">
 
-                <div class="container">
+          <div class="container article-container">
 
-                    <div class="section-title">
+            <div class="news-meta">
 
-                        <h2>
-                            Últimas noticias
-                        </h2>
+              ${escapeHTML(categoryName(news.categoria))}
 
+              ${
+                news.created_at
+                  ? " · " + escapeHTML(formatDate(news.created_at))
+                  : ""
+              }
+
+            </div>
+
+
+            <h1>
+              ${escapeHTML(news.titulo)}
+            </h1>
+
+
+            ${
+              news.resumen
+                ? `
+                  <p class="article-summary">
+                    ${escapeHTML(news.resumen)}
+                  </p>
+                `
+                : ""
+            }
+
+
+            ${
+              news.imagen_url
+                ? `
+                  <img
+                    class="article-image"
+                    src="${imageURL(news.imagen_url)}"
+                    alt="${escapeHTML(news.titulo)}"
+                  >
+                `
+                : ""
+            }
+
+
+            <div class="article-content">
+
+              ${paragraphs}
+
+            </div>
+
+
+            <div style="margin-top:35px">
+
+              <a
+                href="#/"
+                class="btn btn-secondary"
+              >
+                ← Volver a noticias
+              </a>
+
+            </div>
+
+          </div>
+
+        </article>
+
+      `;
+
+    } catch (error) {
+
+      console.error(error);
+
+      app.innerHTML = `
+        <section class="section">
+
+          <div class="container">
+
+            ${showError(
+              "No fue posible cargar esta noticia."
+            )}
+
+          </div>
+
+        </section>
+      `;
+
+    }
+
+  }
+
+
+  /* =========================================================
+     EN VIVO
+     ========================================================= */
+
+  function renderLive() {
+
+    app.innerHTML = `
+
+      <section class="section live-section">
+
+        <div class="container">
+
+          <div class="section-header">
+
+            <div>
+
+              <h1 class="section-title">
+                🔴 Gamarra TV en vivo
+              </h1>
+
+              <p class="section-subtitle" style="color:#b8c4d4">
+                Señal de televisión y contenidos de Gamarra TV.
+              </p>
+
+            </div>
+
+          </div>
+
+
+          <div class="live-box">
+
+            <div class="live-player">
+
+              ${
+                CONFIG.liveUrl
+                  ? `
+                    <iframe
+                      src="${escapeHTML(CONFIG.liveUrl)}"
+                      allow="autoplay; encrypted-media"
+                      allowfullscreen
+                    ></iframe>
+                  `
+                  : `
+                    <div class="live-icon">
+                      📺
                     </div>
 
+                    <h2>
+                      Gamarra TV
+                    </h2>
 
-                    <div class="news-carousel">
+                    <p>
+                      La señal en vivo aparecerá aquí.
+                    </p>
 
-                        <div class="carousel-track">
+                    <p>
+                      Puedes configurar el enlace de transmisión
+                      en <strong>index.html</strong>.
+                    </p>
+                  `
+              }
 
-                            ${renderCarousel(
-                                noticias
-                            )}
+            </div>
 
-                        </div>
+          </div>
 
-                    </div>
+        </div>
 
-                </div>
+      </section>
 
-            </section>
+    `;
+
+  }
+
+
+  /* =========================================================
+     LOGIN
+     ========================================================= */
+
+  function renderLogin() {
+
+    app.innerHTML = `
+
+      <section class="login-page">
+
+        <div class="login-card">
+
+          <img
+            class="login-logo"
+            src="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
+            alt="Gamarra TV"
+          >
+
+
+          <h1>
+            Iniciar sesión
+          </h1>
+
+
+          <p class="login-description">
+            Accede al panel de administración de Gamarra TV.
+          </p>
+
+
+          <div id="loginMessage"></div>
+
+
+          <form id="loginForm">
+
+            <div class="form-group">
+
+              <label for="loginEmail">
+                Correo electrónico
+              </label>
+
+              <input
+                id="loginEmail"
+                name="email"
+                type="email"
+                class="form-control"
+                placeholder="correo@ejemplo.com"
+                required
+              >
+
+            </div>
+
+
+            <div class="form-group">
+
+              <label for="loginPassword">
+                Contraseña
+              </label>
+
+              <input
+                id="loginPassword"
+                name="password"
+                type="password"
+                class="form-control"
+                placeholder="••••••••"
+                required
+              >
+
+            </div>
+
+
+            <button
+              type="submit"
+              class="btn btn-primary"
+              style="width:100%"
+            >
+              Iniciar sesión
+            </button>
+
+          </form>
+
+
+          <div style="text-align:center;margin-top:20px">
+
+            <a
+              href="#/"
+              class="section-link"
+            >
+              ← Volver al sitio
+            </a>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    `;
+
+
+    const form = document.getElementById("loginForm");
+
+
+    form.addEventListener("submit", async event => {
+
+      event.preventDefault();
+
+
+      const message =
+        document.getElementById("loginMessage");
+
+
+      const email =
+        document.getElementById("loginEmail").value.trim();
+
+
+      const password =
+        document.getElementById("loginPassword").value;
+
+
+      message.innerHTML = `
+        <div class="alert alert-info">
+          Iniciando sesión...
+        </div>
+      `;
+
+
+      const {
+        error
+      } = await sb.auth.signInWithPassword({
+        email,
+        password
+      });
+
+
+      if (error) {
+
+        console.error(error);
+
+        message.innerHTML = showError(
+          "No se pudo iniciar sesión. Revisa el correo y la contraseña."
+        );
+
+        return;
+
+      }
+
+
+      showToast("Sesión iniciada correctamente.");
+
+      await updateAuthButton();
+
+      location.hash = "#/admin";
+
+    });
+
+  }
+
+
+  /* =========================================================
+     SUBIR IMAGEN
+     ========================================================= */
+
+  async function uploadImage(file) {
+
+    if (!file) {
+      return null;
+    }
+
+
+    if (!file.type.startsWith("image/")) {
+
+      throw new Error(
+        "El archivo seleccionado no es una imagen."
+      );
+
+    }
+
+
+    if (file.size > 8 * 1024 * 1024) {
+
+      throw new Error(
+        "La imagen no puede superar los 8 MB."
+      );
+
+    }
+
+
+    const extension =
+      file.name.split(".").pop().toLowerCase();
+
+
+    const random =
+      typeof crypto !== "undefined" &&
+      crypto.randomUUID
+        ? crypto.randomUUID()
+        : Math.random().toString(36).substring(2);
+
+
+    const path =
+      `${Date.now()}-${random}.${extension}`;
+
+
+    const {
+      error
+    } = await sb.storage
+      .from("noticias")
+      .upload(path, file, {
+        upsert: false,
+        contentType: file.type
+      });
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    const {
+      data
+    } = sb.storage
+      .from("noticias")
+      .getPublicUrl(path);
+
+
+    return data.publicUrl;
+
+  }
+
+
+  /* =========================================================
+     ADMINISTRACIÓN
+     ========================================================= */
+
+  async function getAdminNews() {
+
+    const {
+      data,
+      error
+    } = await sb
+      .from("noticias")
+      .select("*")
+      .order("created_at", {
+        ascending: false
+      });
+
+
+    if (error) {
+      throw error;
+    }
+
+
+    return data || [];
+
+  }
+
+
+  async function getAdminPrograms() {
+
+    return getPrograms(false);
+
+  }
+
+
+  function adminNewsItem(news) {
+
+    return `
+
+      <div class="admin-item">
+
+        <div class="admin-item-title">
+
+          ${escapeHTML(news.titulo)}
+
+        </div>
+
+
+        <div class="admin-item-meta">
+
+          ${escapeHTML(categoryName(news.categoria))}
+
+          ·
+
+          ${
+            news.publicada
+              ? "Publicada"
+              : "No publicada"
+          }
+
+        </div>
+
+
+        <div class="admin-actions">
+
+          <button
+            class="btn btn-secondary"
+            data-edit-news="${escapeHTML(news.id)}"
+          >
+            Editar
+          </button>
+
+
+          <button
+            class="btn ${
+              news.publicada
+                ? "btn-secondary"
+                : "btn-success"
+            }"
+            data-toggle-news="${escapeHTML(news.id)}"
+          >
+            ${
+              news.publicada
+                ? "Ocultar"
+                : "Publicar"
+            }
+          </button>
+
+
+          <button
+            class="btn btn-danger"
+            data-delete-news="${escapeHTML(news.id)}"
+          >
+            Eliminar
+          </button>
+
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+
+  function adminProgramItem(program) {
+
+    return `
+
+      <div class="admin-item">
+
+        <div class="admin-item-title">
+
+          ${escapeHTML(program.programa)}
+
+        </div>
+
+
+        <div class="admin-item-meta">
+
+          ${escapeHTML(program.dia)}
+
+          ·
+
+          ${escapeHTML(program.hora)}
+
+          ·
+
+          ${
+            program.activo
+              ? "Activo"
+              : "Inactivo"
+          }
+
+        </div>
+
+
+        <div class="admin-actions">
+
+          <button
+            class="btn btn-secondary"
+            data-edit-program="${escapeHTML(program.id)}"
+          >
+            Editar
+          </button>
+
+
+          <button
+            class="btn ${
+              program.activo
+                ? "btn-secondary"
+                : "btn-success"
+            }"
+            data-toggle-program="${escapeHTML(program.id)}"
+          >
+            ${
+              program.activo
+                ? "Desactivar"
+                : "Activar"
+            }
+          </button>
+
+
+          <button
+            class="btn btn-danger"
+            data-delete-program="${escapeHTML(program.id)}"
+          >
+            Eliminar
+          </button>
+
+        </div>
+
+      </div>
+
+    `;
+
+  }
+
+
+  async function renderAdmin() {
+
+    const session = await getSession();
+
+
+    if (!session) {
+
+      renderLogin();
+
+      return;
+
+    }
+
+
+    app.innerHTML = `
+
+      <section class="admin-page">
+
+        <div class="container">
+
+          <div class="admin-header">
+
+            <h1>
+              Panel de Gamarra TV
+            </h1>
+
+            <p>
+              Administra noticias y programación desde este lugar.
+            </p>
+
+          </div>
+
+
+          <div id="adminMessage"></div>
+
+
+          <div class="admin-grid">
 
 
             <!-- NOTICIAS -->
 
-            <section class="section">
+            <div class="admin-card">
 
-                <div class="container">
-
-                    <div class="section-title">
-
-                        <h2>
-                            Noticias
-                        </h2>
-
-                    </div>
+              <h2>
+                📰 Publicar noticia
+              </h2>
 
 
-                    <div class="news-grid">
+              <form id="newsForm">
 
-                        ${renderNewsGrid(
-                            restantes
-                        )}
+                <input
+                  type="hidden"
+                  id="newsId"
+                >
 
-                    </div>
+
+                <div class="form-group">
+
+                  <label>
+                    Título
+                  </label>
+
+                  <input
+                    id="newsTitle"
+                    class="form-control"
+                    required
+                  >
 
                 </div>
 
-            </section>
-        `;
+
+                <div class="form-group">
+
+                  <label>
+                    Categoría
+                  </label>
+
+                  <select
+                    id="newsCategory"
+                    class="form-control"
+                    required
+                  >
+
+                    ${CATEGORIES.map(
+                      category => `
+                        <option value="${category}">
+                          ${CATEGORY_NAMES[category]}
+                        </option>
+                      `
+                    ).join("")}
+
+                  </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                  <label>
+                    Resumen
+                  </label>
+
+                  <textarea
+                    id="newsSummary"
+                    placeholder="Resumen breve de la noticia"
+                  ></textarea>
+
+                </div>
+
+
+                <div class="form-group">
+
+                  <label>
+                    Contenido
+                  </label>
+
+                  <textarea
+                    id="newsContent"
+                    required
+                    placeholder="Escribe aquí el contenido de la noticia"
+                  ></textarea>
+
+                </div>
+
+
+                <div class="form-group">
+
+                  <label>
+                    Imagen
+                  </label>
+
+                  <input
+                    id="newsImage"
+                    class="form-control"
+                    type="file"
+                    accept="image/*"
+                  >
+
+                </div>
+
+
+                <div class="form-group">
+
+                  <label>
+
+                    <input
+                      id="newsPublished"
+                      type="checkbox"
+                      checked
+                    >
+
+                    Publicar inmediatamente
+
+                  </label>
+
+                </div>
+
+
+                <div class="admin-actions">
+
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                  >
+                    Guardar noticia
+                  </button>
+
+
+                  <button
+                    type="button"
+                    id="cancelNewsEdit"
+                    class="btn btn-secondary"
+                    style="display:none"
+                  >
+                    Cancelar edición
+                  </button>
+
+                </div>
+
+              </form>
+
+
+              <div class="admin-list">
+
+                <h3>
+                  Noticias
+                </h3>
+
+                <div id="adminNewsList"></div>
+
+              </div>
+
+            </div>
+
+
+            <!-- PROGRAMACIÓN -->
+
+            <div class="admin-card">
+
+              <h2>
+                📺 Administrar programación
+              </h2>
+
+
+              <form id="programForm">
+
+                <input
+                  type="hidden"
+                  id="programId"
+                >
+
+
+                <div class="form-group">
+
+                  <label>
+                    Día
+                  </label>
+
+                  <select
+                    id="programDay"
+                    class="form-control"
+                    required
+                  >
+
+                    <option value="lunes">Lunes</option>
+                    <option value="martes">Martes</option>
+                    <option value="miércoles">Miércoles</option>
+                    <option value="jueves">Jueves</option>
+                    <option value="viernes">Viernes</option>
+                    <option value="sábado">Sábado</option>
+                    <option value="domingo">Domingo</option>
+
+                  </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                  <label>
+                    Hora
+                  </label>
+
+                  <input
+                    id="programTime"
+                    class="form-control"
+                    type="time"
+                    required
+                  >
+
+                </div>
+
+
+                <div class="form-group">
+
+                  <label>
+                    Programa
+                  </label>
+
+                  <input
+                    id="programName"
+                    class="form-control"
+                    required
+                  >
+
+                </div>
+
+
+                <div class="form-group">
+
+                  <label>
+                    Descripción
+                  </label>
+
+                  <textarea
+                    id="programDescription"
+                    placeholder="Descripción del programa"
+                  ></textarea>
+
+                </div>
+
+
+                <div class="form-group">
+
+                  <label>
+                    Imagen opcional
+                  </label>
+
+                  <input
+                    id="programImage"
+                    class="form-control"
+                    type="file"
+                    accept="image/*"
+                  >
+
+                </div>
+
+
+                <div class="form-group">
+
+                  <label>
+
+                    <input
+                      id="programActive"
+                      type="checkbox"
+                      checked
+                    >
+
+                    Programa activo
+
+                  </label>
+
+                </div>
+
+
+                <div class="admin-actions">
+
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                  >
+                    Guardar programación
+                  </button>
+
+
+                  <button
+                    type="button"
+                    id="cancelProgramEdit"
+                    class="btn btn-secondary"
+                    style="display:none"
+                  >
+                    Cancelar edición
+                  </button>
+
+                </div>
+
+              </form>
+
+
+              <div class="admin-list">
+
+                <h3>
+                  Programas registrados
+                </h3>
+
+                <div id="adminProgramList"></div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div style="margin-top:25px">
+
+            <button
+              id="logoutButton"
+              class="btn btn-danger"
+            >
+              Cerrar sesión
+            </button>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    `;
+
+
+    try {
+
+      state.news = await getAdminNews();
+
+      state.programs = await getAdminPrograms();
+
+
+      document.getElementById("adminNewsList").innerHTML =
+
+        state.news.length
+          ? state.news.map(adminNewsItem).join("")
+          : `
+              <div class="empty">
+                No hay noticias registradas.
+              </div>
+            `;
+
+
+      document.getElementById("adminProgramList").innerHTML =
+
+        state.programs.length
+          ? state.programs
+              .map(adminProgramItem)
+              .join("")
+          : `
+              <div class="empty">
+                No hay programación registrada.
+              </div>
+            `;
 
     } catch (error) {
 
-        showError(error.message);
+      console.error(error);
 
-    }
-
-}
-
-
-/* =====================================================
-   CARRUSEL
-===================================================== */
-
-function renderCarousel(noticias) {
-
-    return noticias
-        .map(noticia => `
-
-            <article
-                class="carousel-card"
-                onclick="location.hash='#/noticia/${noticia.id}'">
-
-                <img
-                    src="${escapeHTML(
-                        imageOrDefault(
-                            noticia.imagen_url
-                        )
-                    )}"
-                    alt="${escapeHTML(
-                        noticia.titulo
-                    )}">
-
-                <div class="carousel-body">
-
-                    <span class="carousel-category">
-
-                        ${escapeHTML(
-                            noticia.categoria ||
-                            "Noticias"
-                        )}
-
-                    </span>
-
-                    <h3>
-
-                        ${escapeHTML(
-                            noticia.titulo
-                        )}
-
-                    </h3>
-
-                </div>
-
-            </article>
-
-        `)
-        .join("");
-
-}
-
-
-/* =====================================================
-   GRID NOTICIAS
-===================================================== */
-
-function renderNewsGrid(noticias) {
-
-    if (!noticias.length) {
-
-        return `
-            <div class="alert alert-success">
-
-                No hay más noticias disponibles.
-
-            </div>
-        `;
-
-    }
-
-    return noticias
-        .map(noticia => `
-
-            <article
-                class="news-card"
-                onclick="location.hash='#/noticia/${noticia.id}'"
-                style="cursor:pointer">
-
-                <img
-                    src="${escapeHTML(
-                        imageOrDefault(
-                            noticia.imagen_url
-                        )
-                    )}"
-                    alt="${escapeHTML(
-                        noticia.titulo
-                    )}">
-
-                <div class="news-card-body">
-
-                    <span class="news-card-category">
-
-                        ${escapeHTML(
-                            noticia.categoria ||
-                            "Noticias"
-                        )}
-
-                    </span>
-
-                    <h3>
-
-                        ${escapeHTML(
-                            noticia.titulo
-                        )}
-
-                    </h3>
-
-                    ${
-                        noticia.resumen
-                        ?
-                        `<p>
-                            ${escapeHTML(
-                                noticia.resumen
-                            )}
-                        </p>`
-                        :
-                        ""
-                    }
-
-                </div>
-
-            </article>
-
-        `)
-        .join("");
-
-}
-
-
-/* =====================================================
-   NOTICIA INDIVIDUAL
-===================================================== */
-
-async function renderNoticia(id) {
-
-    showLoading();
-
-    const {
-        data,
-        error
-    } = await supabaseClient
-        .from("noticias")
-        .select("*")
-        .eq("id", id)
-        .eq("publicada", true)
-        .single();
-
-    if (error || !data) {
-
+      document.getElementById("adminMessage").innerHTML =
         showError(
-            "No encontramos esta noticia."
+          "No fue posible cargar los datos de administración."
         );
 
-        return;
     }
 
 
-    app.innerHTML = `
+    bindAdminEvents();
 
-        <article class="article">
-
-            <div class="article-container">
-
-                <div class="article-category">
-
-                    ${escapeHTML(
-                        data.categoria ||
-                        "Noticias"
-                    )}
-
-                </div>
+  }
 
 
-                <h1>
+  /* =========================================================
+     EVENTOS ADMIN
+     ========================================================= */
 
-                    ${escapeHTML(
-                        data.titulo
-                    )}
+  function bindAdminEvents() {
 
-                </h1>
-
-
-                <div class="article-date">
-
-                    Publicado el
-                    ${formatDate(
-                        data.fecha_publicacion
-                    )}
-
-                </div>
+    const newsForm =
+      document.getElementById("newsForm");
 
 
-                <img
-                    class="article-image"
-                    src="${escapeHTML(
-                        imageOrDefault(
-                            data.imagen_url
-                        )
-                    )}"
-                    alt="${escapeHTML(
-                        data.titulo
-                    )}">
+    const programForm =
+      document.getElementById("programForm");
 
 
-                ${
-                    data.resumen
-                    ?
-                    `<p class="article-content">
-                        <strong>
-                            ${escapeHTML(
-                                data.resumen
-                            )}
-                        </strong>
-                    </p>`
-                    :
-                    ""
-                }
+    /* ---------------- NEWS ---------------- */
+
+    newsForm.addEventListener(
+      "submit",
+      async event => {
+
+        event.preventDefault();
 
 
-                <div class="article-content">
+        const message =
+          document.getElementById("adminMessage");
 
-                    ${escapeHTML(
-                        data.contenido ||
-                        ""
-                    )}
 
-                </div>
+        try {
 
+          const id =
+            document.getElementById("newsId").value;
+
+
+          const titulo =
+            document.getElementById("newsTitle").value.trim();
+
+
+          const categoria =
+            document.getElementById("newsCategory").value;
+
+
+          const resumen =
+            document.getElementById("newsSummary").value.trim();
+
+
+          const contenido =
+            document.getElementById("newsContent").value.trim();
+
+
+          const publicada =
+            document.getElementById("newsPublished").checked;
+
+
+          const file =
+            document.getElementById("newsImage").files[0];
+
+
+          message.innerHTML = `
+            <div class="alert alert-info">
+              Guardando noticia...
             </div>
-
-        </article>
-
-    `;
-
-}
+          `;
 
 
-/* =====================================================
-   CATEGORÍA
-===================================================== */
+          let imagen_url = null;
 
-async function renderCategoria(categoria) {
 
-    showLoading();
+          if (file) {
 
-    const {
-        data,
-        error
-    } = await supabaseClient
-        .from("noticias")
-        .select("*")
-        .eq("publicada", true)
-        .eq("categoria", categoria)
-        .order(
-            "fecha_publicacion",
-            {
-                ascending: false
+            imagen_url = await uploadImage(file);
+
+          }
+
+
+          if (id) {
+
+            const payload = {
+              titulo,
+              categoria,
+              resumen,
+              contenido,
+              publicada
+            };
+
+
+            if (imagen_url) {
+
+              payload.imagen_url = imagen_url;
+
             }
-        );
 
-    if (error) {
 
-        showError(error.message);
+            const {
+              error
+            } = await sb
+              .from("noticias")
+              .update(payload)
+              .eq("id", id);
 
-        return;
-    }
 
+            if (error) {
+              throw error;
+            }
 
-    app.innerHTML = `
 
-        <section class="section">
+            showToast(
+              "Noticia actualizada correctamente."
+            );
 
-            <div class="container">
+          } else {
 
-                <div class="section-title">
+            const payload = {
+              titulo,
+              categoria,
+              resumen,
+              contenido,
+              publicada,
+              imagen_url
+            };
 
-                    <h2>
-                        ${escapeHTML(
-                            categoria
-                        )}
-                    </h2>
 
-                </div>
+            const {
+              error
+            } = await sb
+              .from("noticias")
+              .insert(payload);
 
 
-                ${
-                    data.length
-                    ?
-                    `<div class="news-grid">
-                        ${renderNewsGrid(data)}
-                    </div>`
-                    :
-                    `<div class="alert alert-success">
-                        No hay noticias en esta categoría.
-                    </div>`
-                }
+            if (error) {
+              throw error;
+            }
 
-            </div>
 
-        </section>
+            showToast(
+              "Noticia publicada correctamente."
+            );
 
-    `;
+          }
 
-}
 
+          state.editingNewsId = null;
 
-/* =====================================================
-   PROGRAMACIÓN
-===================================================== */
+          await renderAdmin();
 
-async function getProgramacion() {
+        } catch (error) {
 
-    const {
-        data,
-        error
-    } = await supabaseClient
-        .from("programacion")
-        .select("*")
-        .eq("activo", true)
-        .order("hora", {
-            ascending: true
-        })
-        .limit(8);
+          console.error(error);
 
-    if (error) {
+          message.innerHTML =
+            showError(
+              error.message ||
+              "No fue posible guardar la noticia."
+            );
 
-        console.warn(
-            "Error programación:",
-            error.message
-        );
-
-        return [];
-    }
-
-    return data || [];
-}
-
-
-function renderProgramacion(programas) {
-
-    if (!programas.length) {
-
-        return `
-            <p style="color:#66717f">
-                Próximamente encontrarás
-                nuestra programación.
-            </p>
-        `;
-
-    }
-
-
-    return programas
-        .map(programa => `
-
-            <div class="program-item">
-
-                <div class="program-time">
-
-                    ${escapeHTML(
-                        programa.hora
-                    )}
-
-                </div>
-
-                <div class="program-name">
-
-                    ${escapeHTML(
-                        programa.programa
-                    )}
-
-                </div>
-
-            </div>
-
-        `)
-        .join("");
-
-}
-
-
-/* =====================================================
-   EN VIVO
-===================================================== */
-
-function renderLive() {
-
-    app.innerHTML = `
-
-        <section class="live-page">
-
-            <div class="container">
-
-                <div class="section-title">
-
-                    <h2>
-                        🔴 Gamarra TV En Vivo
-                    </h2>
-
-                </div>
-
-
-                <div class="live-player">
-
-                    <div>
-
-                        <h2>
-                            Gamarra TV
-                        </h2>
-
-                        <p>
-                            Señal en vivo
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-    `;
-
-}
-
-
-/* =====================================================
-   LOGIN
-===================================================== */
-
-function renderLogin() {
-
-    app.innerHTML = `
-
-        <section class="auth-page">
-
-            <div class="auth-box">
-
-                <img
-                    class="auth-logo"
-                    src="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"
-                    alt="Gamarra TV">
-
-
-                <h1>
-                    Iniciar sesión
-                </h1>
-
-
-                <div id="loginMessage"></div>
-
-
-                <form id="loginForm">
-
-                    <div class="form-group">
-
-                        <label>
-                            Correo electrónico
-                        </label>
-
-                        <input
-                            id="loginEmail"
-                            class="form-control"
-                            type="email"
-                            required
-                            autocomplete="email">
-
-                    </div>
-
-
-                    <div class="form-group">
-
-                        <label>
-                            Contraseña
-                        </label>
-
-                        <input
-                            id="loginPassword"
-                            class="form-control"
-                            type="password"
-                            required
-                            autocomplete="current-password">
-
-                    </div>
-
-
-                    <button
-                        class="btn btn-primary"
-                        type="submit"
-                        style="width:100%">
-
-                        🔐 Iniciar sesión
-
-                    </button>
-
-                </form>
-
-            </div>
-
-        </section>
-
-    `;
-
-
-    document
-        .getElementById("loginForm")
-        .addEventListener(
-            "submit",
-            login
-        );
-
-}
-
-
-async function login(event) {
-
-    event.preventDefault();
-
-
-    const email =
-        document.getElementById(
-            "loginEmail"
-        ).value.trim();
-
-
-    const password =
-        document.getElementById(
-            "loginPassword"
-        ).value;
-
-
-    const message =
-        document.getElementById(
-            "loginMessage"
-        );
-
-
-    message.innerHTML = "";
-
-
-    const {
-        error
-    } = await supabaseClient.auth
-        .signInWithPassword({
-            email,
-            password
-        });
-
-
-    if (error) {
-
-        message.innerHTML = `
-            <div class="alert alert-error">
-                ${escapeHTML(
-                    error.message
-                )}
-            </div>
-        `;
-
-        return;
-    }
-
-
-    location.hash = "#/admin";
-
-}
-
-
-/* =====================================================
-   ADMIN
-===================================================== */
-
-async function renderAdmin() {
-
-    const {
-        data: {
-            user
         }
-    } = await supabaseClient.auth
-        .getUser();
 
-
-    if (!user) {
-
-        location.hash = "#/login";
-
-        return;
-    }
-
-
-    app.innerHTML = `
-
-        <section class="admin-page">
-
-            <div class="container">
-
-                <div class="admin-header">
-
-                    <div>
-
-                        <h1>
-                            Panel de Gamarra TV
-                        </h1>
-
-                        <p>
-                            ${escapeHTML(
-                                user.email
-                            )}
-                        </p>
-
-                    </div>
-
-
-                    <button
-                        class="btn btn-danger"
-                        id="logoutButton">
-
-                        Cerrar sesión
-
-                    </button>
-
-                </div>
-
-
-                <div class="admin-tabs">
-
-                    <button
-                        class="admin-tab active"
-                        id="tabNoticias">
-
-                        📰 Noticias
-
-                    </button>
-
-                    <button
-                        class="admin-tab"
-                        id="tabProgramacion">
-
-                        📺 Programación
-
-                    </button>
-
-                </div>
-
-
-                <div id="adminContent"></div>
-
-            </div>
-
-        </section>
-
-    `;
-
-
-    document
-        .getElementById("logoutButton")
-        .addEventListener(
-            "click",
-            async () => {
-
-                await supabaseClient.auth.signOut();
-
-                location.hash = "#/";
-
-            }
-        );
-
-
-    document
-        .getElementById("tabNoticias")
-        .addEventListener(
-            "click",
-            () => {
-
-                activateTab("noticias");
-
-            }
-        );
-
-
-    document
-        .getElementById("tabProgramacion")
-        .addEventListener(
-            "click",
-            () => {
-
-                activateTab("programacion");
-
-            }
-        );
-
-
-    await renderAdminNoticias();
-
-}
-
-
-function activateTab(tab) {
-
-    const noticiasTab =
-        document.getElementById(
-            "tabNoticias"
-        );
-
-    const programacionTab =
-        document.getElementById(
-            "tabProgramacion"
-        );
-
-
-    noticiasTab.classList.remove(
-        "active"
-    );
-
-    programacionTab.classList.remove(
-        "active"
+      }
     );
 
 
-    if (tab === "noticias") {
+    /* ---------------- PROGRAMACIÓN ---------------- */
 
-        noticiasTab.classList.add(
-            "active"
-        );
+    programForm.addEventListener(
+      "submit",
+      async event => {
 
-        renderAdminNoticias();
+        event.preventDefault();
 
-    } else {
 
-        programacionTab.classList.add(
-            "active"
-        );
+        const message =
+          document.getElementById("adminMessage");
 
-        renderAdminProgramacion();
 
-    }
+        try {
 
-}
+          const id =
+            document.getElementById("programId").value;
 
 
-/* =====================================================
-   ADMIN NOTICIAS
-===================================================== */
+          const dia =
+            document.getElementById("programDay").value;
 
-async function renderAdminNoticias() {
 
-    const content =
-        document.getElementById(
-            "adminContent"
-        );
+          const hora =
+            document.getElementById("programTime").value;
 
 
-    content.innerHTML = `
+          const programa =
+            document.getElementById("programName").value.trim();
 
-        <div class="admin-panel">
 
-            <h2>
-                Publicar noticia
-            </h2>
+          const descripcion =
+            document
+              .getElementById("programDescription")
+              .value
+              .trim();
 
 
-            <div id="newsAdminMessage"></div>
+          const activo =
+            document
+              .getElementById("programActive")
+              .checked;
 
 
-            <form id="newsForm">
+          const file =
+            document
+              .getElementById("programImage")
+              .files[0];
 
-                <div class="form-group">
 
-                    <label>
-                        Título
-                    </label>
-
-                    <input
-                        id="newsTitulo"
-                        class="form-control"
-                        required>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label>
-                        Categoría
-                    </label>
-
-                    <select
-                        id="newsCategoria"
-                        class="form-control"
-                        required>
-
-                        <option value="">
-                            Selecciona una categoría
-                        </option>
-
-                        <option value="Gamarra">
-                            Gamarra
-                        </option>
-
-                        <option value="Judicial">
-                            Judicial
-                        </option>
-
-                        <option value="Deportes">
-                            Deportes
-                        </option>
-
-                        <option value="Región">
-                            Región
-                        </option>
-
-                        <option value="Nacionales">
-                            Nacionales
-                        </option>
-
-                        <option value="Internacionales">
-                            Internacionales
-                        </option>
-
-                        <option value="Entretenimiento">
-                            Entretenimiento
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label>
-                        Resumen
-                    </label>
-
-                    <textarea
-                        id="newsResumen"
-                        class="form-control"></textarea>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label>
-                        Contenido
-                    </label>
-
-                    <textarea
-                        id="newsContenido"
-                        class="form-control"
-                        required></textarea>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label>
-                        Imagen
-                    </label>
-
-                    <input
-                        id="newsImagen"
-                        class="form-control"
-                        type="file"
-                        accept="image/*">
-
-                </div>
-
-
-                <button
-                    class="btn btn-primary"
-                    type="submit">
-
-                    📰 Publicar noticia
-
-                </button>
-
-            </form>
-
-        </div>
-
-
-        <div class="admin-panel">
-
-            <h2>
-                Noticias publicadas
-            </h2>
-
-            <div
-                id="adminNewsList"
-                class="admin-list">
-
-                Cargando...
-
+          message.innerHTML = `
+            <div class="alert alert-info">
+              Guardando programación...
             </div>
+          `;
 
-        </div>
 
-    `;
+          let imagen_url = null;
 
+
+          if (file) {
+
+            imagen_url = await uploadImage(file);
+
+          }
+
+
+          if (id) {
+
+            const payload = {
+              dia,
+              hora,
+              programa,
+              descripcion,
+              activo
+            };
+
+
+            if (imagen_url) {
+
+              payload.imagen_url = imagen_url;
+
+            }
+
+
+            const {
+              error
+            } = await sb
+              .from("programacion")
+              .update(payload)
+              .eq("id", id);
+
+
+            if (error) {
+              throw error;
+            }
+
+
+            showToast(
+              "Programación actualizada."
+            );
+
+          } else {
+
+            const payload = {
+              dia,
+              hora,
+              programa,
+              descripcion,
+              activo,
+              imagen_url
+            };
+
+
+            const {
+              error
+            } = await sb
+              .from("programacion")
+              .insert(payload);
+
+
+            if (error) {
+              throw error;
+            }
+
+
+            showToast(
+              "Programa agregado correctamente."
+            );
+
+          }
+
+
+          state.editingProgramId = null;
+
+          await renderAdmin();
+
+        } catch (error) {
+
+          console.error(error);
+
+          message.innerHTML =
+            showError(
+              error.message ||
+              "No fue posible guardar el programa."
+            );
+
+        }
+
+      }
+    );
+
+
+    /* ---------------- LOGOUT ---------------- */
 
     document
-        .getElementById("newsForm")
-        .addEventListener(
-            "submit",
-            publishNews
-        );
+      .getElementById("logoutButton")
+      .addEventListener(
+        "click",
+        async () => {
+
+          await sb.auth.signOut();
+
+          await updateAuthButton();
+
+          location.hash = "#/";
+
+          showToast(
+            "Sesión cerrada."
+          );
+
+        }
+      );
 
 
-    await loadAdminNews();
+    /* ---------------- CANCEL NEWS ---------------- */
 
-}
+    document
+      .getElementById("cancelNewsEdit")
+      .addEventListener(
+        "click",
+        () => {
 
+          state.editingNewsId = null;
 
-/* =====================================================
-   PUBLICAR NOTICIA
-===================================================== */
+          resetNewsForm();
 
-async function publishNews(event) {
-
-    event.preventDefault();
-
-
-    const message =
-        document.getElementById(
-            "newsAdminMessage"
-        );
+        }
+      );
 
 
-    message.innerHTML = `
-        <div class="alert alert-success">
-            Publicando noticia...
-        </div>
-    `;
+    /* ---------------- CANCEL PROGRAM ---------------- */
+
+    document
+      .getElementById("cancelProgramEdit")
+      .addEventListener(
+        "click",
+        () => {
+
+          state.editingProgramId = null;
+
+          resetProgramForm();
+
+        }
+      );
 
 
-    const titulo =
-        document.getElementById(
-            "newsTitulo"
-        ).value.trim();
+    /* ---------------- EDIT NEWS ---------------- */
+
+    document.querySelectorAll(
+      "[data-edit-news]"
+    ).forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const id =
+            button.dataset.editNews;
 
 
-    const categoria =
-        document.getElementById(
-            "newsCategoria"
-        ).value;
-
-
-    const resumen =
-        document.getElementById(
-            "newsResumen"
-        ).value.trim();
-
-
-    const contenido =
-        document.getElementById(
-            "newsContenido"
-        ).value.trim();
-
-
-    const file =
-        document.getElementById(
-            "newsImagen"
-        ).files[0];
-
-
-    let imagen_url = null;
-
-
-    /* -------------------------------------------------
-       SUBIR IMAGEN
-    ------------------------------------------------- */
-
-    if (file) {
-
-        const extension =
-            file.name
-                .split(".")
-                .pop()
-                .toLowerCase();
-
-
-        const filename =
-            `${crypto.randomUUID()}.${extension}`;
-
-
-        const {
-            error: uploadError
-        } = await supabaseClient
-            .storage
-            .from("noticias")
-            .upload(
-                filename,
-                file,
-                {
-                    upsert: false
-                }
+          const news =
+            state.news.find(
+              item => String(item.id) === String(id)
             );
 
 
-        if (uploadError) {
+          if (!news) {
+            return;
+          }
 
-            message.innerHTML = `
-                <div class="alert alert-error">
-                    Error al subir la imagen:
-                    ${escapeHTML(
-                        uploadError.message
-                    )}
-                </div>
-            `;
+
+          state.editingNewsId = id;
+
+
+          document.getElementById("newsId").value =
+            news.id;
+
+
+          document.getElementById("newsTitle").value =
+            news.titulo || "";
+
+
+          document.getElementById("newsCategory").value =
+            news.categoria || "gamarra";
+
+
+          document.getElementById("newsSummary").value =
+            news.resumen || "";
+
+
+          document.getElementById("newsContent").value =
+            news.contenido || "";
+
+
+          document.getElementById("newsPublished").checked =
+            !!news.publicada;
+
+
+          document.getElementById(
+            "cancelNewsEdit"
+          ).style.display = "inline-block";
+
+
+          document
+            .getElementById("newsTitle")
+            .focus();
+
+        }
+      );
+
+    });
+
+
+    /* ---------------- DELETE NEWS ---------------- */
+
+    document.querySelectorAll(
+      "[data-delete-news]"
+    ).forEach(button => {
+
+      button.addEventListener(
+        "click",
+        async () => {
+
+          const id =
+            button.dataset.deleteNews;
+
+
+          if (!confirm(
+            "¿Seguro que quieres eliminar esta noticia?"
+          )) {
+            return;
+          }
+
+
+          const {
+            error
+          } = await sb
+            .from("noticias")
+            .delete()
+            .eq("id", id);
+
+
+          if (error) {
+
+            showToast(
+              "No se pudo eliminar la noticia."
+            );
+
+            console.error(error);
 
             return;
+
+          }
+
+
+          showToast(
+            "Noticia eliminada."
+          );
+
+
+          await renderAdmin();
+
         }
+      );
+
+    });
 
 
-        const {
-            data: publicData
-        } = supabaseClient
-            .storage
+    /* ---------------- TOGGLE NEWS ---------------- */
+
+    document.querySelectorAll(
+      "[data-toggle-news]"
+    ).forEach(button => {
+
+      button.addEventListener(
+        "click",
+        async () => {
+
+          const id =
+            button.dataset.toggleNews;
+
+
+          const news =
+            state.news.find(
+              item => String(item.id) === String(id)
+            );
+
+
+          if (!news) {
+            return;
+          }
+
+
+          const {
+            error
+          } = await sb
             .from("noticias")
-            .getPublicUrl(
-                filename
+            .update({
+              publicada: !news.publicada
+            })
+            .eq("id", id);
+
+
+          if (error) {
+
+            showToast(
+              "No se pudo cambiar el estado."
+            );
+
+            return;
+
+          }
+
+
+          await renderAdmin();
+
+        }
+      );
+
+    });
+
+
+    /* ---------------- EDIT PROGRAM ---------------- */
+
+    document.querySelectorAll(
+      "[data-edit-program]"
+    ).forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          const id =
+            button.dataset.editProgram;
+
+
+          const program =
+            state.programs.find(
+              item => String(item.id) === String(id)
             );
 
 
-        imagen_url =
-            publicData.publicUrl;
+          if (!program) {
+            return;
+          }
 
-    }
 
+          state.editingProgramId = id;
 
-    /* -------------------------------------------------
-       GUARDAR NOTICIA
-    ------------------------------------------------- */
 
-    const {
-        error
-    } = await supabaseClient
-        .from("noticias")
-        .insert({
-            titulo,
-            resumen,
-            contenido,
-            categoria,
-            imagen_url,
-            publicada: true,
-            fecha_publicacion: new Date().toISOString()
-        });
+          document.getElementById("programId").value =
+            program.id;
 
 
-    if (error) {
+          document.getElementById("programDay").value =
+            program.dia || "lunes";
 
-        console.error(error);
 
-        message.innerHTML = `
-            <div class="alert alert-error">
+          document.getElementById("programTime").value =
+            String(program.hora || "").substring(0, 5);
 
-                No se pudo publicar la noticia:
 
-                ${escapeHTML(
-                    error.message
-                )}
+          document.getElementById("programName").value =
+            program.programa || "";
 
-            </div>
-        `;
 
-        return;
-    }
+          document.getElementById(
+            "programDescription"
+          ).value =
+            program.descripcion || "";
 
 
-    message.innerHTML = `
-        <div class="alert alert-success">
+          document.getElementById(
+            "programActive"
+          ).checked =
+            !!program.activo;
 
-            ✅ Noticia publicada correctamente.
 
-        </div>
-    `;
+          document.getElementById(
+            "cancelProgramEdit"
+          ).style.display =
+            "inline-block";
 
 
-    document
-        .getElementById(
-            "newsForm"
-        )
-        .reset();
+          document
+            .getElementById("programName")
+            .focus();
 
+        }
+      );
 
-    await loadAdminNews();
+    });
 
-}
 
+    /* ---------------- DELETE PROGRAM ---------------- */
 
-/* =====================================================
-   LISTA ADMIN NOTICIAS
-===================================================== */
+    document.querySelectorAll(
+      "[data-delete-program]"
+    ).forEach(button => {
 
-async function loadAdminNews() {
+      button.addEventListener(
+        "click",
+        async () => {
 
-    const list =
-        document.getElementById(
-            "adminNewsList"
-        );
+          const id =
+            button.dataset.deleteProgram;
 
 
-    if (!list) {
-        return;
-    }
+          if (!confirm(
+            "¿Seguro que quieres eliminar este programa?"
+          )) {
+            return;
+          }
 
 
-    const {
-        data,
-        error
-    } = await supabaseClient
-        .from("noticias")
-        .select("*")
-        .order(
-            "fecha_publicacion",
-            {
-                ascending: false
-            }
-        );
+          const {
+            error
+          } = await sb
+            .from("programacion")
+            .delete()
+            .eq("id", id);
 
 
-    if (error) {
+          if (error) {
 
-        list.innerHTML = `
-            <div class="alert alert-error">
-                ${escapeHTML(
-                    error.message
-                )}
-            </div>
-        `;
+            console.error(error);
 
-        return;
-    }
+            showToast(
+              "No se pudo eliminar el programa."
+            );
 
+            return;
 
-    if (!data.length) {
+          }
 
-        list.innerHTML = `
-            <div class="alert alert-success">
-                No hay noticias todavía.
-            </div>
-        `;
 
-        return;
-    }
+          showToast(
+            "Programa eliminado."
+          );
 
 
-    list.innerHTML =
-        data.map(noticia => `
+          await renderAdmin();
 
-            <div class="admin-item">
+        }
+      );
 
-                <div class="admin-item-info">
+    });
 
-                    <strong>
-                        ${escapeHTML(
-                            noticia.titulo
-                        )}
-                    </strong>
 
-                    <small>
+    /* ---------------- TOGGLE PROGRAM ---------------- */
 
-                        ${escapeHTML(
-                            noticia.categoria ||
-                            "Sin categoría"
-                        )}
+    document.querySelectorAll(
+      "[data-toggle-program]"
+    ).forEach(button => {
 
-                        ·
+      button.addEventListener(
+        "click",
+        async () => {
 
-                        ${formatDate(
-                            noticia.fecha_publicacion
-                        )}
+          const id =
+            button.dataset.toggleProgram;
 
-                    </small>
 
-                </div>
-
-
-                <div class="admin-actions">
-
-                    <button
-                        class="btn btn-danger"
-                        onclick="deleteNews('${noticia.id}')">
-
-                        Eliminar
-
-                    </button>
-
-                </div>
-
-            </div>
-
-        `)
-        .join("");
-
-}
-
-
-/* =====================================================
-   ELIMINAR NOTICIA
-===================================================== */
-
-async function deleteNews(id) {
-
-    if (
-        !confirm(
-            "¿Seguro que deseas eliminar esta noticia?"
-        )
-    ) {
-        return;
-    }
-
-
-    const {
-        error
-    } = await supabaseClient
-        .from("noticias")
-        .delete()
-        .eq("id", id);
-
-
-    if (error) {
-
-        alert(
-            "No se pudo eliminar: " +
-            error.message
-        );
-
-        return;
-    }
-
-
-    await loadAdminNews();
-
-}
-
-
-/* =====================================================
-   ADMIN PROGRAMACION
-===================================================== */
-
-async function renderAdminProgramacion() {
-
-    const content =
-        document.getElementById(
-            "adminContent"
-        );
-
-
-    content.innerHTML = `
-
-        <div class="admin-panel">
-
-            <h2>
-                Agregar programa
-            </h2>
-
-
-            <div id="programMessage"></div>
-
-
-            <form id="programForm">
-
-                <div class="form-group">
-
-                    <label>
-                        Día
-                    </label>
-
-                    <select
-                        id="programDia"
-                        class="form-control"
-                        required>
-
-                        <option value="">
-                            Selecciona un día
-                        </option>
-
-                        <option value="Lunes">
-                            Lunes
-                        </option>
-
-                        <option value="Martes">
-                            Martes
-                        </option>
-
-                        <option value="Miércoles">
-                            Miércoles
-                        </option>
-
-                        <option value="Jueves">
-                            Jueves
-                        </option>
-
-                        <option value="Viernes">
-                            Viernes
-                        </option>
-
-                        <option value="Sábado">
-                            Sábado
-                        </option>
-
-                        <option value="Domingo">
-                            Domingo
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label>
-                        Hora
-                    </label>
-
-                    <input
-                        id="programHora"
-                        class="form-control"
-                        type="time"
-                        required>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label>
-                        Nombre del programa
-                    </label>
-
-                    <input
-                        id="programNombre"
-                        class="form-control"
-                        required>
-
-                </div>
-
-
-                <div class="form-group">
-
-                    <label>
-                        Descripción
-                    </label>
-
-                    <textarea
-                        id="programDescripcion"
-                        class="form-control"></textarea>
-
-                </div>
-
-
-                <button
-                    class="btn btn-primary"
-                    type="submit">
-
-                    📺 Guardar programa
-
-                </button>
-
-            </form>
-
-        </div>
-
-
-        <div class="admin-panel">
-
-            <h2>
-                Programación registrada
-            </h2>
-
-            <div
-                id="adminProgramList"
-                class="admin-list">
-
-                Cargando...
-
-            </div>
-
-        </div>
-
-    `;
-
-
-    document
-        .getElementById("programForm")
-        .addEventListener(
-            "submit",
-            saveProgram
-        );
-
-
-    await loadAdminPrograms();
-
-}
-
-
-/* =====================================================
-   GUARDAR PROGRAMA
-===================================================== */
-
-async function saveProgram(event) {
-
-    event.preventDefault();
-
-
-    const message =
-        document.getElementById(
-            "programMessage"
-        );
-
-
-    const dia =
-        document.getElementById(
-            "programDia"
-        ).value;
-
-
-    const hora =
-        document.getElementById(
-            "programHora"
-        ).value;
-
-
-    const programa =
-        document.getElementById(
-            "programNombre"
-        ).value.trim();
-
-
-    const descripcion =
-        document.getElementById(
-            "programDescripcion"
-        ).value.trim();
-
-
-    const {
-        error
-    } = await supabaseClient
-        .from("programacion")
-        .insert({
-            dia,
-            hora,
-            programa,
-            descripcion,
-            activo: true
-        });
-
-
-    if (error) {
-
-        console.error(error);
-
-        message.innerHTML = `
-            <div class="alert alert-error">
-
-                No se pudo guardar:
-
-                ${escapeHTML(
-                    error.message
-                )}
-
-            </div>
-        `;
-
-        return;
-    }
-
-
-    message.innerHTML = `
-        <div class="alert alert-success">
-
-            ✅ Programa agregado correctamente.
-
-        </div>
-    `;
-
-
-    document
-        .getElementById(
-            "programForm"
-        )
-        .reset();
-
-
-    await loadAdminPrograms();
-
-}
-
-
-/* =====================================================
-   LISTA PROGRAMACIÓN
-===================================================== */
-
-async function loadAdminPrograms() {
-
-    const list =
-        document.getElementById(
-            "adminProgramList"
-        );
-
-
-    if (!list) {
-        return;
-    }
-
-
-    const {
-        data,
-        error
-    } = await supabaseClient
-        .from("programacion")
-        .select("*")
-        .order(
-            "hora",
-            {
-                ascending: true
-            }
-        );
-
-
-    if (error) {
-
-        list.innerHTML = `
-            <div class="alert alert-error">
-
-                ${escapeHTML(
-                    error.message
-                )}
-
-            </div>
-        `;
-
-        return;
-    }
-
-
-    if (!data.length) {
-
-        list.innerHTML = `
-            <div class="alert alert-success">
-
-                No hay programas registrados.
-
-            </div>
-        `;
-
-        return;
-    }
-
-
-    list.innerHTML =
-        data.map(programa => `
-
-            <div class="admin-item">
-
-                <div class="admin-item-info">
-
-                    <strong>
-
-                        ${escapeHTML(
-                            programa.hora
-                        )}
-
-                        ·
-
-                        ${escapeHTML(
-                            programa.programa
-                        )}
-
-                    </strong>
-
-                    <small>
-
-                        ${escapeHTML(
-                            programa.dia
-                        )}
-
-                    </small>
-
-                </div>
-
-
-                <div class="admin-actions">
-
-                    <button
-                        class="btn btn-danger"
-                        onclick="deleteProgram('${programa.id}')">
-
-                        Eliminar
-
-                    </button>
-
-                </div>
-
-            </div>
-
-        `)
-        .join("");
-
-}
-
-
-/* =====================================================
-   ELIMINAR PROGRAMACIÓN
-===================================================== */
-
-async function deleteProgram(id) {
-
-    if (
-        !confirm(
-            "¿Seguro que deseas eliminar este programa?"
-        )
-    ) {
-        return;
-    }
-
-
-    const {
-        error
-    } = await supabaseClient
-        .from("programacion")
-        .delete()
-        .eq("id", id);
-
-
-    if (error) {
-
-        alert(
-            "No se pudo eliminar: " +
-            error.message
-        );
-
-        return;
-    }
-
-
-    await loadAdminPrograms();
-
-}
-
-
-/* =====================================================
-   ROUTER
-===================================================== */
-
-async function router() {
-
-    const hash =
-        location.hash || "#/";
-
-
-    if (
-        hash === "#/" ||
-        hash === "#"
-    ) {
-
-        await renderHome();
-
-        return;
-    }
-
-
-    if (
-        hash === "#/login"
-    ) {
-
-        renderLogin();
-
-        return;
-    }
-
-
-    if (
-        hash === "#/admin"
-    ) {
-
-        await renderAdmin();
-
-        return;
-    }
-
-
-    if (
-        hash === "#/en-vivo"
-    ) {
-
-        renderLive();
-
-        return;
-    }
-
-
-    if (
-        hash.startsWith(
-            "#/noticia/"
-        )
-    ) {
-
-        const id =
-            hash.split(
-                "#/noticia/"
-            )[1];
-
-
-        await renderNoticia(id);
-
-        return;
-    }
-
-
-    if (
-        hash.startsWith(
-            "#/categoria/"
-        )
-    ) {
-
-        const categoria =
-            decodeURIComponent(
-                hash.split(
-                    "#/categoria/"
-                )[1]
+          const program =
+            state.programs.find(
+              item => String(item.id) === String(id)
             );
 
 
-        await renderCategoria(
-            categoria
-        );
+          if (!program) {
+            return;
+          }
 
-        return;
+
+          const {
+            error
+          } = await sb
+            .from("programacion")
+            .update({
+              activo: !program.activo
+            })
+            .eq("id", id);
+
+
+          if (error) {
+
+            showToast(
+              "No se pudo cambiar el estado."
+            );
+
+            return;
+
+          }
+
+
+          await renderAdmin();
+
+        }
+      );
+
+    });
+
+  }
+
+
+  function resetNewsForm() {
+
+    document.getElementById("newsForm").reset();
+
+    document.getElementById("newsId").value = "";
+
+    document.getElementById("newsPublished").checked =
+      true;
+
+    document.getElementById(
+      "cancelNewsEdit"
+    ).style.display = "none";
+
+  }
+
+
+  function resetProgramForm() {
+
+    document.getElementById("programForm").reset();
+
+    document.getElementById("programId").value = "";
+
+    document.getElementById("programActive").checked =
+      true;
+
+    document.getElementById(
+      "cancelProgramEdit"
+    ).style.display = "none";
+
+  }
+
+
+  /* =========================================================
+     ROUTER
+     ========================================================= */
+
+  async function router() {
+
+    closeMobileMenu();
+
+
+    const route = getHashRoute();
+
+
+    console.log(
+      "Gamarra TV route:",
+      route
+    );
+
+
+    /* INICIO */
+
+    if (
+      route === "/" ||
+      route === ""
+    ) {
+
+      await renderHome();
+
+      return;
+
     }
 
 
-    await renderHome();
+    /* LOGIN */
 
-}
+    if (
+      route === "/login" ||
+      route === "/iniciar-sesion"
+    ) {
+
+      const session = await getSession();
 
 
-/* =====================================================
-   CAMBIO DE RUTA
-===================================================== */
+      if (session) {
 
-window.addEventListener(
+        location.hash = "#/admin";
+
+        return;
+
+      }
+
+
+      renderLogin();
+
+      return;
+
+    }
+
+
+    /* ADMIN */
+
+    if (
+      route === "/admin" ||
+      route === "/administracion"
+    ) {
+
+      await renderAdmin();
+
+      return;
+
+    }
+
+
+    /* EN VIVO */
+
+    if (
+      route === "/en-vivo"
+    ) {
+
+      renderLive();
+
+      return;
+
+    }
+
+
+    /* CATEGORÍA */
+
+    if (
+      route.startsWith("/categoria/")
+    ) {
+
+      const category =
+        decodeURIComponent(
+          route
+            .replace("/categoria/", "")
+            .split("/")[0]
+        ).toLowerCase();
+
+
+      if (!CATEGORIES.includes(category)) {
+
+        app.innerHTML = `
+          <section class="section">
+
+            <div class="container">
+
+              <div class="empty">
+
+                <h2>
+                  Sección no encontrada
+                </h2>
+
+                <a
+                  href="#/"
+                  class="btn btn-primary"
+                >
+                  Volver al inicio
+                </a>
+
+              </div>
+
+            </div>
+
+          </section>
+        `;
+
+        return;
+
+      }
+
+
+      await renderCategory(category);
+
+      return;
+
+    }
+
+
+    /* NOTICIA */
+
+    if (
+      route.startsWith("/noticia/")
+    ) {
+
+      const id =
+        decodeURIComponent(
+          route.replace("/noticia/", "")
+        );
+
+
+      await renderArticle(id);
+
+      return;
+
+    }
+
+
+    /* 404 */
+
+    app.innerHTML = `
+
+      <section class="section">
+
+        <div class="container">
+
+          <div class="empty">
+
+            <h2>
+              La página que buscas no existe.
+            </h2>
+
+            <p>
+              Puede que el enlace haya cambiado.
+            </p>
+
+            <a
+              href="#/"
+              class="btn btn-primary"
+            >
+              Ir al inicio
+            </a>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    `;
+
+  }
+
+
+  /* =========================================================
+     MENÚ MÓVIL
+     ========================================================= */
+
+  if (menuToggle) {
+
+    menuToggle.addEventListener(
+      "click",
+      () => {
+
+        mainNav.classList.toggle("open");
+
+      }
+    );
+
+  }
+
+
+  /* =========================================================
+     CAMBIO DE RUTA
+     ========================================================= */
+
+  window.addEventListener(
     "hashchange",
     router
-);
+  );
 
 
-/* =====================================================
-   INICIAR
-===================================================== */
+  /* =========================================================
+     AUTH STATE
+     ========================================================= */
 
-router();
+  async function startAuthListener() {
+
+    if (!sb) {
+      return;
+    }
+
+
+    sb.auth.onAuthStateChange(
+      async () => {
+
+        await updateAuthButton();
+
+      }
+    );
+
+  }
+
+
+  /* =========================================================
+     INICIO
+     ========================================================= */
+
+  async function start() {
+
+    const initialized =
+      initSupabase();
+
+
+    if (!initialized) {
+      return;
+    }
+
+
+    await updateAuthButton();
+
+    await startAuthListener();
+
+    await router();
+
+  }
+
+
+  start();
+
+})();
