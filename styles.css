@@ -216,3 +216,52 @@ img,iframe{max-width:100%}
   .weather-stats{grid-template-columns:1fr}
   .forecast-grid{grid-template-columns:1fr}
 }
+
+/* Corrección definitiva del carrusel de últimas noticias en teléfonos */
+@media (max-width: 600px){
+  .latest-home .news-carousel,
+  .news-carousel{
+    display:flex !important;
+    flex-direction:row;
+    align-items:stretch;
+    gap:14px;
+    width:100%;
+    max-width:100%;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding:2px 2px 16px;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+  }
+  .latest-home .news-carousel .news-card,
+  .news-carousel .news-card{
+    display:block;
+    flex:0 0 calc(100vw - 34px) !important;
+    width:calc(100vw - 34px) !important;
+    min-width:calc(100vw - 34px) !important;
+    max-width:calc(100vw - 34px) !important;
+    margin:0;
+    scroll-snap-align:start;
+    box-sizing:border-box;
+  }
+  .latest-home .news-image-wrap,
+  .news-carousel .news-image-wrap{height:220px;}
+  .latest-home .news-body,
+  .news-carousel .news-body{padding:0 18px 18px;}
+  .latest-home .news-body h3,
+  .news-carousel .news-body h3{font-size:20px;line-height:1.2;}
+  .latest-home .news-body p,
+  .news-carousel .news-body p{font-size:13px;}
+  .latest-home .news-card .tag,
+  .news-carousel .news-card .tag{left:16px;}
+}
+
+@media (max-width:380px){
+  .latest-home .news-carousel .news-card,
+  .news-carousel .news-card{
+    flex-basis:calc(100vw - 26px) !important;
+    width:calc(100vw - 26px) !important;
+    min-width:calc(100vw - 26px) !important;
+    max-width:calc(100vw - 26px) !important;
+  }
+}
