@@ -1,78 +1,196 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Gamarra TV - Noticias, televisión, deportes y actualidad.">
-  <meta name="theme-color" content="#071a35">
-  <title>Gamarra TV | Noticias y Televisión</title>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#071a35;
+  --navy2:#0b2345;
+  --blue:#0e5cc7;
+  --yellow:#ffc400;
+  --red:#e31b23;
+  --light:#f5f7fa;
+  --border:#e2e7ee;
+  --text:#172033;
+  --muted:#667085;
+  --white:#fff;
+  --shadow:0 8px 30px rgba(7,26,53,.09);
+}
+html{scroll-behavior:smooth}
+body{font-family:Arial,Helvetica,sans-serif;background:#fff;color:var(--text);line-height:1.55}
+a{text-decoration:none;color:inherit}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+img{max-width:100%;display:block}
+.container{width:min(1180px,calc(100% - 32px));margin:auto}
 
-  <link rel="icon" type="image/png" href="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png">
-  <link rel="apple-touch-icon" href="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png">
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <div class="topbar">
-    <div class="container topbar-inner">
-      <span>Noticias, televisión y actualidad</span>
-      <div class="social-mini">
-        <a href="https://www.facebook.com/GamarraTelvision" target="_blank" rel="noopener">Facebook</a>
-        <a href="https://www.youtube.com/@gamarratvoficial" target="_blank" rel="noopener">YouTube</a>
-        <a href="https://www.instagram.com/gamarratvoficial/" target="_blank" rel="noopener">Instagram</a>
-        <a href="https://www.tiktok.com/@gamarratvoficial" target="_blank" rel="noopener">TikTok</a>
-      </div>
-    </div>
-  </div>
+.topbar{background:var(--navy);color:#dce7f5;font-size:13px}
+.topbar-inner{min-height:38px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.social-mini{display:flex;gap:16px}
+.social-mini a:hover{color:var(--yellow)}
 
-  <header class="site-header">
-    <div class="container header-main">
-      <a class="brand" href="#/" aria-label="Gamarra TV inicio">
-        <img src="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png" alt="Gamarra TV">
-      </a>
+.site-header{position:sticky;top:0;z-index:1000;background:#fff;border-bottom:1px solid var(--border);box-shadow:0 2px 12px rgba(0,0,0,.04)}
+.header-main{min-height:82px;display:flex;align-items:center;gap:18px}
+.brand{display:flex;align-items:center;flex:0 0 auto}
+.brand img{width:145px;height:auto;max-height:62px;object-fit:contain}
+.main-nav{display:flex;align-items:center;justify-content:center;gap:15px;flex:1}
+.main-nav a{font-size:14px;font-weight:700;color:#26344a;white-space:nowrap}
+.main-nav a:hover{color:var(--blue)}
+.live-link{color:var(--red)!important}
+.login-link{background:var(--navy);color:#fff!important;border-radius:8px;padding:10px 14px;font-size:14px;font-weight:700;white-space:nowrap}
+.login-link:hover{background:var(--blue)}
+.menu-toggle{display:none;border:0;background:var(--navy);color:#fff;border-radius:7px;padding:8px 11px;font-size:21px}
 
-      <button class="menu-toggle" id="menuToggle" aria-label="Abrir menú">☰</button>
+.hero{background:linear-gradient(135deg,var(--navy),#0b376d);color:#fff;padding:54px 0}
+.hero-grid{display:grid;grid-template-columns:1.35fr .65fr;gap:30px;align-items:center}
+.hero h1{font-size:clamp(34px,5vw,58px);line-height:1.03;margin-bottom:16px}
+.hero p{font-size:18px;color:#d7e4f4;max-width:700px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:25px}
+.btn{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:8px;padding:11px 17px;font-weight:700}
+.btn-primary{background:var(--yellow);color:#111}
+.btn-dark{background:#fff;color:var(--navy)}
+.btn-danger{background:var(--red);color:#fff}
+.btn-outline{background:#fff;border:1px solid var(--border);color:var(--navy)}
+.hero-card{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:24px}
+.hero-card strong{display:block;font-size:28px;margin-bottom:5px}
+.hero-card span{color:#d7e4f4}
 
-      <nav id="mainNav" class="main-nav">
-        <a href="#/">Inicio</a>
-        <a href="#/categoria/gamarra">Gamarra</a>
-        <a href="#/categoria/judicial">Judicial</a>
-        <a href="#/categoria/deportes">Deportes</a>
-        <a href="#/categoria/region">Región</a>
-        <a href="#/categoria/nacionales">Nacionales</a>
-        <a href="#/categoria/internacionales">Internacionales</a>
-        <a href="#/categoria/entretenimiento">Entretenimiento</a>
-        <a class="live-link" href="#/en-vivo">🔴 En vivo</a>
-      </nav>
+.section{padding:42px 0}
+.section-head{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:20px}
+.section-title{font-size:28px;color:var(--navy)}
+.section-subtitle{color:var(--muted);font-size:14px}
 
-      <a id="authLink" href="#/login" class="login-link">🔒 Iniciar sesión</a>
-    </div>
-  </header>
+.live-tv-section{background:#05080d;padding:38px 0}
+.live-tv-container{width:min(1250px,calc(100% - 24px));margin:auto;display:grid;grid-template-columns:minmax(0,1fr) 365px;gap:0;border-radius:12px;overflow:hidden;box-shadow:0 15px 45px rgba(0,0,0,.25)}
+.live-player{background:#000;min-height:520px}
+.live-player iframe{width:100%;height:100%;min-height:520px;border:0;display:block}
+.live-schedule{background:#101820;color:#fff;padding:22px}
+.schedule-title{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.schedule-title h2{font-size:19px;letter-spacing:.4px}
+.live-dot{width:10px;height:10px;background:var(--red);border-radius:50%;box-shadow:0 0 0 5px rgba(227,27,35,.14)}
+.schedule-days{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:18px}
+.day-btn{border:1px solid #2c3744;background:#18222c;color:#c8d0d9;border-radius:5px;padding:7px 3px;font-size:11px;font-weight:800}
+.day-btn.active{background:var(--yellow);color:#111;border-color:var(--yellow)}
+.schedule-list{display:flex;flex-direction:column;gap:9px;max-height:420px;overflow:auto;padding-right:3px}
+.schedule-item{background:#18222c;border-radius:8px;padding:12px;border-left:3px solid transparent}
+.schedule-item .schedule-time{display:block;color:#b9c4d0;font-size:12px;margin-top:2px}
+.schedule-item strong{display:block;margin-top:3px;font-size:15px}
+.schedule-item.now{border-left-color:var(--yellow);background:#1d2935}
+.schedule-item.now small{display:block;color:var(--yellow);font-weight:800}
+.schedule-empty{padding:20px 10px;color:#aeb8c3;text-align:center;background:#18222c;border-radius:8px}
 
-  <main id="app"></main>
+.news-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.news-card{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff;box-shadow:var(--shadow);transition:.2s}
+.news-card:hover{transform:translateY(-2px)}
+.news-image{height:190px;background:#e9eef4;object-fit:cover;width:100%}
+.news-body{padding:16px}
+.badge{display:inline-block;background:#eaf2ff;color:var(--blue);border-radius:20px;padding:4px 9px;font-size:11px;font-weight:800;text-transform:uppercase}
+.news-card h3{font-size:19px;line-height:1.25;margin:9px 0}
+.news-card p{color:var(--muted);font-size:14px}
+.news-date{display:block;color:#8993a2;font-size:12px;margin-top:12px}
+.no-image{height:190px;background:linear-gradient(135deg,#dce6f2,#f3f6fa);display:flex;align-items:center;justify-content:center;color:#728096;font-weight:800}
 
-  <footer class="footer">
-    <div class="container footer-inner">
-      <div>
-        <strong>Gamarra TV</strong>
-        <p>Noticias, televisión y actualidad.</p>
-      </div>
-      <div class="footer-social">
-        <a href="https://www.facebook.com/GamarraTelvision" target="_blank" rel="noopener">Facebook</a>
-        <a href="https://www.youtube.com/@gamarratvoficial" target="_blank" rel="noopener">YouTube</a>
-        <a href="https://www.instagram.com/gamarratvoficial/" target="_blank" rel="noopener">Instagram</a>
-      </div>
-    </div>
-    <div class="copyright">© <span id="year"></span> Gamarra TV. Todos los derechos reservados.</div>
-  </footer>
+.latest-carousel{position:relative}
+.carousel-track{display:flex;gap:18px;overflow-x:auto;scroll-behavior:smooth;scrollbar-width:none;padding:4px 2px 12px}
+.carousel-track::-webkit-scrollbar{display:none}
+.carousel-card{min-width:310px;max-width:310px}
+.carousel-controls{display:flex;gap:8px}
+.carousel-controls button{border:1px solid var(--border);background:#fff;border-radius:7px;padding:8px 12px}
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    window.__SUPABASE_CONFIG__ = {
-      url: "https://hjexlltqhjdmlwxgptpj.supabase.co",
-      publishableKey: "sb_publishable_tXJAIc_OeskuGOgXB_7pfg_HyVjbGsF",
-      liveUrl: "https://new.opencaster.com/player/embed?user=gamarratv"
-    };
-  </script>
-  <script src="app.js" defer></script>
-</body>
-</html>
+.category-head{background:var(--light);padding:35px 0;border-bottom:1px solid var(--border)}
+.category-head h1{font-size:34px;color:var(--navy)}
+.category-head p{color:var(--muted);margin-top:6px}
+
+.article{padding:45px 0}
+.article-wrap{max-width:900px;margin:auto}
+.article h1{font-size:clamp(32px,5vw,52px);line-height:1.08;color:var(--navy);margin:10px 0 14px}
+.article-meta{color:var(--muted);font-size:13px;margin-bottom:22px}
+.article-cover{width:100%;max-height:520px;object-fit:cover;border-radius:14px;margin-bottom:25px}
+.article-content{font-size:18px;line-height:1.8;white-space:pre-wrap}
+.article-summary{font-size:19px;color:#526174;margin-bottom:25px;font-weight:600}
+
+.login-page{min-height:70vh;display:grid;place-items:center;padding:50px 16px;background:var(--light)}
+.login-box{width:min(430px,100%);background:#fff;border:1px solid var(--border);box-shadow:var(--shadow);border-radius:16px;padding:30px}
+.login-box h1{color:var(--navy);margin-bottom:7px}
+.login-box p{color:var(--muted);margin-bottom:22px}
+.form-group{margin-bottom:15px}
+.form-group label{display:block;font-size:13px;font-weight:800;margin-bottom:6px}
+.form-control{width:100%;border:1px solid #ccd5df;border-radius:8px;padding:11px 12px;outline:0;background:#fff}
+.form-control:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(14,92,199,.1)}
+textarea.form-control{min-height:125px;resize:vertical}
+select.form-control{cursor:pointer}
+.checkbox{display:flex;align-items:center;gap:8px;font-size:14px;margin:12px 0}
+.form-actions{display:flex;gap:10px;flex-wrap:wrap}
+.alert{padding:12px 14px;border-radius:8px;margin-bottom:16px;font-size:14px}
+.alert-error{background:#fff0f1;color:#a50e16;border:1px solid #ffc7ca}
+.alert-success{background:#edf9f0;color:#17672b;border:1px solid #c7eacb}
+
+.admin-page{background:var(--light);padding:35px 0 55px;min-height:75vh}
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.panel{background:#fff;border:1px solid var(--border);border-radius:13px;padding:22px;box-shadow:var(--shadow)}
+.panel h2{color:var(--navy);font-size:22px;margin-bottom:5px}
+.panel .panel-sub{color:var(--muted);font-size:13px;margin-bottom:18px}
+.admin-list{margin-top:22px;display:flex;flex-direction:column;gap:10px}
+.admin-item{border:1px solid var(--border);border-radius:9px;padding:12px;display:flex;justify-content:space-between;gap:15px;align-items:flex-start}
+.admin-item-title{font-weight:800;color:var(--navy)}
+.admin-item-meta{font-size:12px;color:var(--muted);margin-top:3px}
+.admin-actions{display:flex;gap:6px;flex-wrap:wrap}
+.small-btn{border:1px solid var(--border);background:#fff;border-radius:6px;padding:7px 9px;font-size:12px;font-weight:700}
+.small-btn.danger{color:var(--red);border-color:#f3c3c6}
+.admin-top{display:flex;justify-content:space-between;gap:15px;align-items:center;margin-bottom:22px;flex-wrap:wrap}
+.user-chip{background:#fff;border:1px solid var(--border);border-radius:20px;padding:7px 11px;font-size:12px;color:var(--muted)}
+.upload-preview{max-width:180px;max-height:100px;border-radius:8px;object-fit:cover;margin-top:8px}
+.loading{padding:35px;text-align:center;color:var(--muted)}
+.empty{padding:25px;text-align:center;border:1px dashed #cfd7e1;border-radius:10px;color:var(--muted)}
+.spinner{display:inline-block;width:18px;height:18px;border:3px solid #dce3ea;border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.footer{background:var(--navy);color:#c8d5e6;margin-top:0}
+.footer-inner{padding:30px 0;display:flex;justify-content:space-between;gap:20px}
+.footer strong{color:#fff;font-size:20px}
+.footer p{margin-top:4px}
+.footer-social{display:flex;gap:16px;align-items:center}
+.footer-social a:hover{color:var(--yellow)}
+.copyright{border-top:1px solid rgba(255,255,255,.1);text-align:center;padding:13px;font-size:12px;color:#93a5bc}
+
+.not-found{padding:80px 16px;text-align:center}
+.not-found h1{font-size:44px;color:var(--navy)}
+.not-found p{color:var(--muted);margin:10px 0 22px}
+
+@media(max-width:1050px){
+  .main-nav{gap:10px}
+  .main-nav a{font-size:12px}
+  .brand img{width:125px}
+}
+@media(max-width:850px){
+  .topbar-inner{padding:7px 0;align-items:flex-start}
+  .social-mini{gap:9px;flex-wrap:wrap;justify-content:flex-end}
+  .header-main{min-height:70px}
+  .menu-toggle{display:block;margin-left:auto}
+  .main-nav{display:none;position:absolute;left:0;right:0;top:70px;background:#fff;border-bottom:1px solid var(--border);box-shadow:var(--shadow);padding:12px 16px;flex-direction:column;align-items:stretch;gap:0}
+  .main-nav.open{display:flex}
+  .main-nav a{padding:11px 0;border-bottom:1px solid #eef1f4;font-size:14px}
+  .login-link{order:3}
+  .hero-grid{grid-template-columns:1fr}
+  .live-tv-container{grid-template-columns:1fr}
+  .live-player,.live-player iframe{min-height:390px}
+  .admin-grid{grid-template-columns:1fr}
+}
+@media(max-width:620px){
+  .container{width:min(100% - 22px,1180px)}
+  .topbar{font-size:11px}
+  .social-mini{display:none}
+  .brand img{width:112px}
+  .header-main{gap:8px}
+  .login-link{font-size:11px;padding:8px 9px}
+  .hero{padding:40px 0}
+  .hero h1{font-size:36px}
+  .hero p{font-size:16px}
+  .section{padding:32px 0}
+  .section-title{font-size:24px}
+  .news-grid{grid-template-columns:1fr}
+  .carousel-card{min-width:82vw;max-width:82vw}
+  .live-tv-section{padding:18px 0}
+  .live-tv-container{width:100%;border-radius:0}
+  .live-player,.live-player iframe{min-height:250px}
+  .live-schedule{padding:16px}
+  .schedule-days{gap:3px}
+  .day-btn{font-size:9px;padding:6px 2px}
+  .footer-inner{flex-direction:column}
+}
