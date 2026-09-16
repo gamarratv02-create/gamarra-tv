@@ -4,7 +4,7 @@ const sb=window.supabase?.createClient(C.url,C.publishableKey);
 const app=document.getElementById('app');
 if(!sb){app.innerHTML='<div class="error-box"><h2>No se pudo inicializar Gamarra TV</h2><p>Revisa la configuración de Supabase.</p></div>';return}
 const DAYS=[['lunes','LUN',1],['martes','MAR',2],['miercoles','MIÉ',3],['jueves','JUE',4],['viernes','VIE',5],['sabado','SÁB',6],['domingo','DOM',7]];
-const CATS=['gamarra','judicial','deportes','region','nacionales','internacionales','entretenimiento'];
+const CATS=['gamarra','seguridad','judicial','politica','educacion','salud','economia','deportes','region','nacionales','internacionales','entretenimiento'];
 const S={session:null,news:[],programs:[],day:null};
 const esc=x=>String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const slugify=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
@@ -21,16 +21,24 @@ async function session(){S.session=(await sb.auth.getSession()).data.session||nu
 async function loadNews(cat){let q=sb.from('noticias').select('id,titulo,resumen,contenido,imagen_url,categoria,publicada,created_at,slug').eq('publicada',true).order('created_at',{ascending:false}).limit(50);if(cat)q=q.eq('categoria',cat);let r=await q;if(r.error){const q2=sb.from('noticias').select('id,titulo,resumen,contenido,imagen_url,categoria,publicada,created_at').eq('publicada',true).order('created_at',{ascending:false}).limit(50);if(cat)q2=q2.eq('categoria',cat);r=await q2}if(r.error)throw r.error;S.news=r.data||[];return S.news}
 async function loadPrograms(){const r=await sb.from('programacion').select('id,dia,dia_semana,hora_inicio,hora_fin,hora,programa,descripcion,imagen_url,activo,created_at').eq('activo',true).order('dia_semana',{ascending:true}).order('hora_inicio',{ascending:true});if(r.error)throw r.error;S.programs=r.data||[];return S.programs}
 function newsHref(n){return '#/noticia/'+encodeURIComponent(n.slug||slugify(n.titulo)||n.id)}
-function categoryLabel(c){return ({gamarra:'GAMARRA',judicial:'JUDICIAL',deportes:'DEPORTES',region:'REGIÓN',nacionales:'NACIONALES',internacionales:'INTERNACIONALES',entretenimiento:'ENTRETENIMIENTO'})[String(c||'').toLowerCase()]||String(c||'NOTICIAS').toUpperCase()}
+function categoryLabel(c){return ({gamarra:'GAMARRA',seguridad:'SEGURIDAD',judicial:'JUDICIAL',politica:'POLÍTICA',educacion:'EDUCACIÓN',salud:'SALUD',economia:'ECONOMÍA',deportes:'DEPORTES',region:'REGIÓN',nacionales:'NACIONALES',internacionales:'INTERNACIONALES',entretenimiento:'ENTRETENIMIENTO'})[String(c||'').toLowerCase()]||String(c||'NOTICIAS').toUpperCase()}
 function card(n){const image=n.imagen_url?`<img src="${esc(n.imagen_url)}" alt="${esc(n.titulo)}" loading="lazy">`:'<div class="image-fallback">GAMARRA TV</div>';const reading=Math.max(1,Math.ceil(String(n.contenido||n.resumen||'').length/900));return `<article class="news-card"><a href="${newsHref(n)}"><div class="news-image-wrap">${image}<span class="tag">${esc(categoryLabel(n.categoria))}</span></div><div class="news-body"><h3>${esc(n.titulo)}</h3><p>${esc(n.resumen||'Conozca los detalles de esta noticia en Gamarra TV.')}</p><div class="news-meta"><span>◷ ${esc(shortDate(n.created_at))}</span><span>◴ ${reading} min</span></div><div class="read"><span>LEER NOTICIA</span><span class="arrow">→</span></div></div></a></article>`}
 function hero(){const [a,b,c]=S.news;if(!a)return'<div class="empty"><h2>No hay noticias publicadas</h2><p>Las nuevas noticias aparecerán aquí automáticamente.</p></div>';const feature=n=>n?`<a class="feature" href="${newsHref(n)}">${n.imagen_url?`<img src="${esc(n.imagen_url)}" alt="${esc(n.titulo)}">`:''}<div class="feature-content"><span class="tag">${esc(categoryLabel(n.categoria))}</span><h2>${esc(n.titulo)}</h2></div></a>`:'';return `<section class="hero"><div class="container hero-grid"><a class="hero-main" href="${newsHref(a)}">${a.imagen_url?`<img src="${esc(a.imagen_url)}" alt="${esc(a.titulo)}">`:''}<div class="hero-content"><span class="tag">${esc(categoryLabel(a.categoria))}</span><h1>${esc(a.titulo)}</h1><p>${esc(a.resumen||'Noticias y actualidad en Gamarra TV.')}</p><span class="hero-link">Leer noticia →</span></div></a><div class="features">${feature(b)}${feature(c)}</div></div></section>`}
 function scheduleRows(day){const di=dayInfo(day);return S.programs.filter(p=>String(p.dia||'').toLowerCase()===day||Number(p.dia_semana)===di[2]).sort((a,b)=>String(a.hora_inicio||a.hora||'').localeCompare(String(b.hora_inicio||b.hora||'')))}
 function getCurrent(rows,day){if(day!==todayName())return null;const now=new Date();const nowM=now.getHours()*60+now.getMinutes();for(const p of rows){const st=mins(p.hora_inicio||p.hora),en=mins(p.hora_fin);if(st===null)continue;if(en===null&&nowM>=st)return p;if(en!==null){if(en>=st&&nowM>=st&&nowM<en)return p;if(en<st&&(nowM>=st||nowM<en))return p}}return null}
 function getNext(rows,current,day){if(!rows.length||day!==todayName())return null;const nowM=new Date().getHours()*60+new Date().getMinutes();const after=rows.filter(p=>{const st=mins(p.hora_inicio||p.hora);return st!==null&&st>nowM});return after[0]||null}
-function live(){const d=S.day||todayName(),rows=scheduleRows(d),current=getCurrent(rows,d),next=getNext(rows,current,d);const rowsHtml=rows.length?rows.map(p=>{const is=p.id===current?.id;return `<div class="program ${is?'now':''}">${is?'<div class="now-badge">🔴 AHORA</div>':''}<span class="time">${esc(time(p.hora_inicio||p.hora))}${p.hora_fin?' — '+esc(time(p.hora_fin)):''}</span><strong>${esc(p.programa)}</strong>${p.descripcion?`<small>${esc(p.descripcion)}</small>`:''}</div>`}).join(''):'<div class="empty">No hay programación publicada para este día.</div>';return `<section class="live-section"><div class="container"><div class="live-title"><div><span class="live-kicker">GTV MEDIOS</span><h2>Gamarra TV <b>EN VIVO</b></h2></div><span class="live-pill"><i></i> SEÑAL EN DIRECTO</span></div><div class="live-layout"><div class="player-column"><div class="player"><iframe src="${esc(C.liveUrl||'')}" title="Señal en vivo de Gamarra TV" allow="autoplay;fullscreen" allowfullscreen></iframe><div class="player-label"><i></i> GTV EN VIVO</div></div><div class="live-note">Señal abierta de Gamarra TV</div></div><aside class="schedule"><div class="schedule-head"><div><span>HOY EN GTV</span><h3>PROGRAMACIÓN</h3></div><span class="schedule-day">${esc(dayInfo(d)[1])}</span></div><div class="days">${DAYS.map(x=>`<button class="day ${d===x[0]?'active':''}" data-day="${x[0]}">${x[1]}</button>`).join('')}</div><div class="schedule-list">${rowsHtml}</div><div class="next-box">${next?`<span>PRÓXIMO</span><strong>${esc(next.programa)}</strong><small>${esc(time(next.hora_inicio||next.hora))}</small>`:`<span>PROGRAMACIÓN</span><strong>${current?'Al aire en este momento':'Fuera de programación'}</strong>`}</div></aside></div></div></section>`}
-function categoryBar(){return `<div class="category-strip">${CATS.map(c=>`<a href="#/categoria/${c}" class="category-pill ${location.hash.toLowerCase().includes('/categoria/'+c)?'active':''}">${esc(categoryLabel(c))}</a>`).join('')}</div>`}
-function home(){return `${live()}<section class="section latest-bottom"><div class="container"><div class="section-head"><div><span class="kicker">GTV NOTICIAS</span><h2>Últimas noticias</h2><p class="section-subtitle">Las noticias más recientes de Gamarra TV, con sus fotografías y categorías.</p></div><div class="carousel-btns"><button id="prev" aria-label="Noticias anteriores">←</button><button id="next" aria-label="Siguientes noticias">→</button></div></div><div id="carousel" class="news-carousel">${S.news.map(card).join('')}</div></div></section>${hero()}${homeSections()}`}
-
+function live(){
+ const d=S.day||todayName(),rows=scheduleRows(d),current=getCurrent(rows,d),next=getNext(rows,current,d);
+ const fallback=C.logo||'https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png';
+ const rowsHtml=rows.length?rows.map(p=>{
+   const is=p.id===current?.id, logo=p.imagen_url||fallback;
+   return `<div class="program ${is?'now':''}">
+     <div class="program-logo-wrap"><img class="program-logo" src="${esc(logo)}" alt="Logo de ${esc(p.programa||'programa')}" onerror="this.onerror=null;this.src='${esc(fallback)}'"></div>
+     <div class="program-info">${is?'<div class="now-badge">🔴 AHORA</div>':''}<span class="time">${esc(time(p.hora_inicio||p.hora))}${p.hora_fin?' — '+esc(time(p.hora_fin)):''}</span><strong>${esc(p.programa)}</strong>${p.descripcion?`<small>${esc(p.descripcion)}</small>`:''}</div>
+   </div>`
+ }).join(''):'<div class="empty">No hay programación publicada para este día.</div>';
+ return `<section class="live-section"><div class="container"><div class="live-title"><div><span class="live-kicker">GTV MEDIOS</span><h2>Gamarra TV <b>EN VIVO</b></h2></div><span class="live-pill"><i></i> SEÑAL EN DIRECTO</span></div><div class="live-layout"><div class="player-column"><div class="player"><iframe src="${esc(C.liveUrl||'')}" title="Señal en vivo de Gamarra TV" allow="autoplay;fullscreen" allowfullscreen></iframe><div class="player-label"><i></i> GTV EN VIVO</div></div><div class="live-note">Señal abierta de Gamarra TV</div></div><aside class="schedule"><div class="schedule-head"><div><span>HOY EN GTV</span><h3>PROGRAMACIÓN</h3></div><span class="schedule-day">${esc(dayInfo(d)[1])}</span></div><div class="days">${DAYS.map(x=>`<button class="day ${d===x[0]?'active':''}" data-day="${x[0]}">${x[1]}</button>`).join('')}</div><div class="schedule-list">${rowsHtml}</div><div class="next-box">${next?`<span>PRÓXIMO</span><strong>${esc(next.programa)}</strong><small>${esc(time(next.hora_inicio||next.hora))}</small>`:`<span>PROGRAMACIÓN</span><strong>${current?'Al aire en este momento':'Fuera de programación'}</strong>`}</div></aside></div></div></section>`
+}
 function homeSections(){return `<section class="section category-sections"><div class="container">${CATS.map(cat=>{const items=S.news.filter(n=>String(n.categoria||'').toLowerCase()===cat).slice(0,4);if(!items.length)return '';return `<div class="news-category-section"><div class="section-head compact"><div><span class="kicker">GTV NOTICIAS</span><h2>${esc(categoryLabel(cat))}</h2></div><a class="section-more" href="#/categoria/${cat}">Ver todas →</a></div><div class="section-news-grid">${items.map(card).join('')}</div></div>`}).join('')}</div></section>`}
 function bindHome(){bindLive();const p=document.getElementById('prev'),n=document.getElementById('next'),c=document.getElementById('carousel');if(p)p.onclick=()=>c.scrollBy({left:-390,behavior:'smooth'});if(n)n.onclick=()=>c.scrollBy({left:390,behavior:'smooth'});const first=S.news[0];if(first)document.getElementById('breakingText').textContent=first.titulo}
 function bindLive(){document.querySelectorAll('.day').forEach(b=>b.onclick=()=>{S.day=b.dataset.day;render()})}
@@ -59,7 +67,7 @@ async function admin(){
           <label>Logo / imagen del programa
             <input name="program_imagen_url" type="url" placeholder="https://...">
           </label></div><div class="field"><label>Hora inicio</label><input name="hora_inicio" type="time" required></div><div class="field"><label>Hora final</label><input name="hora_fin" type="time" required></div><div class="field full"><label>Descripción</label><input name="descripcion"></div><div><label><input type="checkbox" name="activo" checked> Activo</label></div><div class="field full"><button id="progSubmit" class="btn btn-primary">📺 Guardar programa</button></div></form>
- <div class="admin-list"><h4>Programas registrados</h4>${programs.length?programs.map(x=>`<div class="admin-item"><div class="admin-item-media"><div class="program-icon">📺</div></div><div class="admin-item-info"><span class="admin-day">${esc(dayInfo(String(x.dia||'').toLowerCase())[1])}</span><h4>${esc(x.programa)}</h4><small>${esc(time(x.hora_inicio||x.hora))}${x.hora_fin?' — '+esc(time(x.hora_fin)) : ''} · ${x.activo?'Activo':'Inactivo'}</small></div><div class="admin-actions"><button class="btn btn-edit edit-program" data-id="${esc(x.id)}">✏️ Editar</button><button class="btn btn-danger delete-program" data-id="${esc(x.id)}">🗑️ Eliminar</button></div></div>`).join(''):'<div class="empty-admin">No hay programas registrados.</div>'}</div></div>
+ <div class="admin-list"><h4>Programas registrados</h4>${programs.length?programs.map(x=>`<div class="admin-item"><div class="admin-item-media">${x.imagen_url?`<img src="${esc(x.imagen_url)}" alt="" onerror="this.style.display='none'">`:'<div class="program-icon">📺</div>'}</div><div class="admin-item-info"><span class="admin-day">${esc(dayInfo(String(x.dia||'').toLowerCase())[1])}</span><h4>${esc(x.programa)}</h4><small>${esc(time(x.hora_inicio||x.hora))}${x.hora_fin?' — '+esc(time(x.hora_fin)) : ''} · ${x.activo?'Activo':'Inactivo'}</small></div><div class="admin-actions"><button class="btn btn-edit edit-program" data-id="${esc(x.id)}">✏️ Editar</button><button class="btn btn-danger delete-program" data-id="${esc(x.id)}">🗑️ Eliminar</button></div></div>`).join(''):'<div class="empty-admin">No hay programas registrados.</div>'}</div></div>
  <div class="admin-help"><b>URLs de noticias:</b> se generan automáticamente con el título, por ejemplo <code>#/noticia/joven-de-21-anos-fue-asesinado</code>.</div>
  </div></div></section>`;
  document.getElementById('logout').onclick=async()=>{await sb.auth.signOut();S.session=null;location.hash='#/'};
@@ -76,7 +84,7 @@ function resetNewsForm(){const f=document.getElementById('newsForm');if(!f)retur
 function resetProgForm(){const f=document.getElementById('progForm');if(!f)return;f.reset();f.elements.programacion_id.value='';f.elements.activo.checked=true;document.getElementById('progSubmit').textContent='📺 Guardar programa';document.getElementById('cancelProgEdit').classList.add('hidden')}
 function editNews(id,news){const n=news.find(x=>String(x.id)===String(id));if(!n)return;const f=document.getElementById('newsForm');f.elements.news_id.value=n.id;f.elements.titulo.value=n.titulo||'';f.elements.categoria.value=n.categoria||'gamarra';f.elements.imagen_url.value=n.imagen_url||'';f.elements.resumen.value=n.resumen||'';f.elements.contenido.value=n.contenido||'';f.elements.slug.value=n.slug||slugify(n.titulo);f.elements.publicada.checked=!!n.publicada;document.getElementById('newsSubmit').textContent='💾 Guardar cambios';document.getElementById('cancelNewsEdit').classList.remove('hidden');f.scrollIntoView({behavior:'smooth',block:'center'})}
 async function deleteNews(id){if(!S.session)return;if(!confirm('¿Seguro que deseas eliminar esta noticia? Esta acción no se puede deshacer.'))return;const r=await sb.from('noticias').delete().eq('id',id);if(r.error){notify(r.error.message,'error');return}notify('Noticia eliminada correctamente');await admin()}
-function editProgram(id,programs){const x=programs.find(p=>String(p.id)===String(id));if(!x)return;const f=document.getElementById('progForm');f.elements.programacion_id.value=x.id;f.elements.dia.value=x.dia||DAYS.find(d=>d[2]===Number(x.dia_semana))?.[0]||'lunes';f.elements.programa.value=x.programa||'';f.elements.hora_inicio.value=String(x.hora_inicio||x.hora||'').slice(0,5);f.elements.hora_fin.value=String(x.hora_fin||'').slice(0,5);f.elements.descripcion.value=x.descripcion||'';f.elements.activo.checked=x.activo!==false;document.getElementById('progSubmit').textContent='💾 Guardar cambios';document.getElementById('cancelProgEdit').classList.remove('hidden');f.scrollIntoView({behavior:'smooth',block:'center'})}
+function editProgram(id,programs){const x=programs.find(p=>String(p.id)===String(id));if(!x)return;const f=document.getElementById('progForm');f.elements.programacion_id.value=x.id;f.elements.dia.value=x.dia||DAYS.find(d=>d[2]===Number(x.dia_semana))?.[0]||'lunes';f.elements.programa.value=x.programa||'';const logoInput=f.elements.program_imagen_url;if(logoInput)logoInput.value=x.imagen_url||'';f.elements.hora_inicio.value=String(x.hora_inicio||x.hora||'').slice(0,5);f.elements.hora_fin.value=String(x.hora_fin||'').slice(0,5);f.elements.descripcion.value=x.descripcion||'';f.elements.activo.checked=x.activo!==false;document.getElementById('progSubmit').textContent='💾 Guardar cambios';document.getElementById('cancelProgEdit').classList.remove('hidden');f.scrollIntoView({behavior:'smooth',block:'center'})}
 async function deleteProgram(id){if(!S.session)return;if(!confirm('¿Seguro que deseas eliminar este programa? Esta acción no se puede deshacer.'))return;const r=await sb.from('programacion').delete().eq('id',id);if(r.error){notify(r.error.message,'error');return}notify('Programa eliminado correctamente');await admin()}
 async function saveNews(e){
  e.preventDefault();if(!S.session){notify('Debes iniciar sesión','error');return}
@@ -84,20 +92,90 @@ async function saveNews(e){
  if(!titulo||!contenido){notify('Título y contenido son obligatorios','error');return}
  let slug=slugify(f.get('slug')||titulo)||`noticia-${Date.now()}`;
  if(!id){const check=await sb.from('noticias').select('id').eq('slug',slug).limit(1);if(!check.error&&check.data?.length)slug=`${slug}-${Date.now().toString().slice(-6)}`}
- const programLogo = (fd.get('program_imagen_url') || '').trim();
-  const data={titulo,slug,resumen:String(f.get('resumen')||'').trim()||null,contenido,imagen_url:String(f.get('imagen_url')||'').trim()||null,categoria:String(f.get('categoria')||'gamarra').toLowerCase(),publicada:f.get('publicada')==='on'};
+ const data={titulo,slug,resumen:String(f.get('resumen')||'').trim()||null,contenido,imagen_url:String(f.get('imagen_url')||'').trim()||null,categoria:String(f.get('categoria')||'gamarra').toLowerCase(),publicada:f.get('publicada')==='on'};
  const r=id?await sb.from('noticias').update(data).eq('id',id):await sb.from('noticias').insert(data);
- if(r.error){notify(r.error.message,'error');return}
+ if(r.error){console.error('Error al guardar noticia:',r.error);notify(`No se pudo guardar la noticia: ${r.error.message||'Error de Supabase'}`,'error');return}
  notify(id?'Noticia actualizada correctamente':'Noticia publicada correctamente');resetNewsForm();await admin()
 }
 async function saveProg(e){
  e.preventDefault();if(!S.session){notify('Debes iniciar sesión','error');return}
- const f=new FormData(e.currentTarget),id=String(f.get('programacion_id')||'').trim(),dia=String(f.get('dia')),di=dayInfo(dia),data={dia,dia_semana:di[2],hora_inicio:f.get('hora_inicio'),hora_fin:f.get('hora_fin'),hora:f.get('hora_inicio'),programa:String(f.get('programa')||'').trim(),descripcion:String(f.get('descripcion')||'').trim()||null,activo:f.get('activo')==='on'};
+ const f=new FormData(e.currentTarget),id=String(f.get('programacion_id')||'').trim(),dia=String(f.get('dia')),di=dayInfo(dia),data={dia,dia_semana:di[2],hora_inicio:f.get('hora_inicio'),hora_fin:f.get('hora_fin'),hora:f.get('hora_inicio'),programa:String(f.get('programa')||'').trim(),descripcion:String(f.get('descripcion')||'').trim()||null,imagen_url:String(f.get('program_imagen_url')||'').trim()||null,activo:f.get('activo')==='on'};
  if(!data.programa||!data.hora_inicio||!data.hora_fin){notify('Día, programa y horarios son obligatorios','error');return}
  const r=id?await sb.from('programacion').update(data).eq('id',id):await sb.from('programacion').insert(data);
  if(r.error){notify(r.error.message,'error');return}
  notify(id?'Programa actualizado correctamente':'Programa guardado correctamente');resetProgForm();await admin()
 }
-async function render(){const hash=location.hash||'#/';try{if(hash.startsWith('#/noticia/')){return article(decodeURIComponent(hash.slice(10)))}if(hash==='#/login')return login();if(hash==='#/admin')return admin();const cat=hash.startsWith('#/categoria/')?decodeURIComponent(hash.slice(12)).toLowerCase():null;if(hash==='#/en-vivo'||hash==='#/programacion'){setMeta();await loadPrograms();app.innerHTML=live();bindLive();return}setMeta();await loadNews(cat);if(cat){app.innerHTML=`<section class="section category-page"><div class="container"><span class="kicker">GTV NOTICIAS</span><h1>${esc(categoryLabel(cat))}</h1><p class="section-subtitle">Noticias publicadas en la categoría ${esc(categoryLabel(cat))}.</p><div class="category-news-grid">${S.news.map(card).join('')}</div></div></section>`}else{await loadPrograms();S.day=null;app.innerHTML=home();bindHome()}}catch(e){console.error(e);app.innerHTML=`<div class="error-box"><h2>No se pudo cargar el contenido</h2><p>${esc(e.message||e)}</p><a class="back-link" href="#/">← Volver al inicio</a></div>`}}
+
+function contact(){
+ setMeta();
+ app.innerHTML=`<section class="contact-page">
+   <div class="container">
+    <div class="contact-hero">
+      <span class="contact-kicker">GAMARRA TV</span>
+      <h1>Estamos para escucharte</h1>
+      <p>¿Tienes una noticia, una denuncia, una propuesta comercial o quieres comunicarte con nuestro equipo? Estamos disponibles para recibir tus mensajes.</p>
+    </div>
+    <div class="contact-layout">
+      <div class="contact-main">
+        <span class="kicker">GAMARRA TV</span><h2>COMUNÍCATE CON NOSOTROS</h2>
+        <p class="contact-intro">Gamarra TV es un medio de comunicación local comprometido con informar, conectar y dar voz a nuestra comunidad.</p>
+        <div class="contact-cards">
+          <a class="contact-card" href="https://wa.me/573027826222" target="_blank" rel="noopener"><div class="contact-icon whatsapp">💬</div><div><strong>WhatsApp</strong><span>302 782 0622</span></div></a>
+          <a class="contact-card" href="tel:+573027826222"><div class="contact-icon phone">📞</div><div><strong>Teléfono</strong><span>302 782 0622</span></div></a>
+          <a class="contact-card" href="mailto:gamarratv02@gmail.com"><div class="contact-icon mail">✉</div><div><strong>Correo electrónico</strong><span>gamarratv02@gmail.com</span></div></a>
+          <div class="contact-card"><div class="contact-icon coverage">📍</div><div><strong>Cobertura</strong><span>Gamarra · Sur del Cesar · Magdalena Medio · Región</span></div></div>
+        </div>
+        <div class="contact-message"><span>GTV</span><strong>Tu canal, tu comunidad, nuestra voz.</strong><small>Gamarra TV · Noticias, televisión y actualidad</small></div>
+      </div>
+      <aside class="contact-side">
+        <div class="side-title"><span class="kicker">CONTACTO</span><h3>GAMARRA TV</h3><p>Conéctate con nuestro equipo</p></div>
+        <a href="https://wa.me/573027826222" target="_blank" rel="noopener" class="side-action"><b>💬</b><span><strong>WhatsApp</strong><small>Enviar mensaje</small></span><i>→</i></a>
+        <a href="mailto:gamarratv02@gmail.com" class="side-action"><b>✉</b><span><strong>Correo</strong><small>gamarratv02@gmail.com</small></span><i>→</i></a>
+        <a href="#/clima" class="side-action"><b>☀️</b><span><strong>El clima</strong><small>Consulta el tiempo en Gamarra</small></span><i>→</i></a>
+      </aside>
+    </div>
+   </div>
+ </section>`;
+}
+
+async function weatherPage(){
+ setMeta();
+ app.innerHTML=`<section class="weather-page"><div class="container">
+   <div class="weather-hero"><span class="weather-kicker">☁ GAMARRA TV</span><h1>El clima</h1><p>Consulta las condiciones meteorológicas actuales y el pronóstico de los próximos días en cualquier lugar del mundo.</p></div>
+   <form id="weatherSearch" class="weather-search"><label>BUSCAR UBICACIÓN</label><div class="weather-search-row"><input id="weatherPlace" placeholder="Ejemplo: Bogotá, Madrid, Miami..." autocomplete="off"><button>⌕ Buscar</button></div></form>
+   <div id="weatherResult"><div class="weather-loading">Consultando el clima de Gamarra, Cesar...</div></div>
+ </div></section>`;
+ const form=document.getElementById('weatherSearch');
+ form.onsubmit=async e=>{e.preventDefault();const place=document.getElementById('weatherPlace').value.trim();await fetchWeather(place||'Gamarra, Cesar, Colombia')};
+ await fetchWeather('Gamarra, Cesar, Colombia');
+}
+
+async function fetchWeather(place){
+ const result=document.getElementById('weatherResult');if(!result)return;
+ result.innerHTML='<div class="weather-loading">Cargando información meteorológica...</div>';
+ try{
+  const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(place)}&count=1&language=es&format=json`).then(r=>r.json());
+  const loc=geo.results?.[0];
+  if(!loc)throw new Error('No encontramos esa ubicación. Intenta con otra ciudad.');
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=7`;
+  const data=await fetch(url).then(r=>r.json());
+  const wcode=data.current.weather_code;
+  const currentWeather=weatherInfo(wcode);
+  const days=data.daily.time.map((d,i)=>({date:d,code:data.daily.weather_code[i],max:data.daily.temperature_2m_max[i],min:data.daily.temperature_2m_min[i],rain:data.daily.precipitation_probability_max[i]}));
+  result.innerHTML=`<div class="weather-current">
+    <div class="weather-location">⌖ ${esc(loc.name)}, ${esc(loc.admin1||'')}, ${esc(loc.country||'')}</div>
+    <div class="weather-current-main"><div class="weather-symbol">${currentWeather.icon}</div><div><div class="weather-temp">${Math.round(data.current.temperature_2m)}°<small>${esc(data.current_units?.temperature_2m||'C')}</small></div><strong>${currentWeather.label}</strong><span class="weather-updated">Condiciones actuales</span></div></div>
+    <div class="weather-stats"><div><b>💧</b><span>Humedad</span><strong>${Math.round(data.current.relative_humidity_2m)}%</strong></div><div><b>≋</b><span>Viento</span><strong>${Math.round(data.current.wind_speed_10m)} km/h</strong></div><div><b>☔</b><span>Prob. lluvia</span><strong>${Math.round(data.daily.precipitation_probability_max?.[0]||0)}%</strong></div></div>
+  </div>
+  <div class="forecast-head"><div><span class="kicker">PRONÓSTICO</span><h2>Próximos 7 días</h2></div><small>Actualización automática</small></div>
+  <div class="forecast-grid">${days.map((d,i)=>{const inf=weatherInfo(d.code);return `<div class="forecast-card ${i===0?'today':''}"><div class="forecast-day">${i===0?'HOY':formatForecastDay(d.date)}</div><div class="forecast-icon">${inf.icon}</div><strong>${Math.round(d.max)}°</strong><span>Min. ${Math.round(d.min)}°</span><div class="forecast-line"></div><small>☔ ${Math.round(d.rain||0)}%</small></div>`}).join('')}</div>
+  <div class="weather-source">Información meteorológica proporcionada por Open-Meteo. Las condiciones pueden cambiar.</div>`;
+ }catch(err){result.innerHTML=`<div class="weather-error"><h3>No se pudo consultar el clima</h3><p>${esc(err.message||'Intenta nuevamente.')}</p><button id="weatherRetry" class="btn btn-primary">Volver a Gamarra</button></div>`;const retry=document.getElementById('weatherRetry');if(retry)retry.onclick=()=>fetchWeather('Gamarra, Cesar, Colombia')}
+}
+function weatherInfo(code){
+ const m={0:['☀️','Despejado'],1:['🌤️','Mayormente despejado'],2:['⛅','Parcialmente nublado'],3:['☁️','Nublado'],45:['🌫️','Niebla'],48:['🌫️','Niebla'],51:['🌦️','Llovizna'],53:['🌦️','Llovizna'],55:['🌧️','Llovizna intensa'],61:['🌧️','Lluvia'],63:['🌧️','Lluvia moderada'],65:['🌧️','Lluvia intensa'],71:['🌨️','Nieve'],73:['🌨️','Nieve moderada'],75:['❄️','Nieve intensa'],80:['🌦️','Chubascos'],81:['🌧️','Chubascos'],82:['⛈️','Chubascos fuertes'],95:['⛈️','Tormenta'],96:['⛈️','Tormenta con granizo'],99:['⛈️','Tormenta con granizo']};const x=m[code]||['🌡️','Condición variable'];return{icon:x[0],label:x[1]}}
+function formatForecastDay(dateStr){return new Intl.DateTimeFormat('es-CO',{weekday:'short',day:'2-digit'}).format(new Date(dateStr+'T12:00:00')).toUpperCase().replace('.','')}
+
+async function render(){const hash=location.hash||'#/';try{if(hash.startsWith('#/noticia/')){return article(decodeURIComponent(hash.slice(10)))}if(hash==='#/login')return login();if(hash==='#/admin')return admin();if(hash==='#/contacto')return contact();if(hash==='#/clima')return weatherPage();const cat=hash.startsWith('#/categoria/')?decodeURIComponent(hash.slice(12)).toLowerCase():null;if(hash==='#/en-vivo'||hash==='#/programacion'){setMeta();await loadPrograms();app.innerHTML=live();bindLive();return}setMeta();await loadNews(cat);if(cat){app.innerHTML=`<section class="section category-page"><div class="container"><span class="kicker">GTV NOTICIAS</span><h1>${esc(categoryLabel(cat))}</h1><p class="section-subtitle">Noticias publicadas en la categoría ${esc(categoryLabel(cat))}.</p><div class="category-news-grid">${S.news.map(card).join('')}</div></div></section>`}else{await loadPrograms();S.day=null;app.innerHTML=home();bindHome()}}catch(e){console.error(e);app.innerHTML=`<div class="error-box"><h2>No se pudo cargar el contenido</h2><p>${esc(e.message||e)}</p><a class="back-link" href="#/">← Volver al inicio</a></div>`}}
 sb.auth.onAuthStateChange(()=>setTimeout(session,0));window.addEventListener('hashchange',render);setInterval(()=>{if(location.hash==='#/en-vivo'||location.hash==='#/programacion'||location.hash===''||location.hash==='#/')render()},60000);(async()=>{await session();await render()})();
 })();
