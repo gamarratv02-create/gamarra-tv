@@ -255,7 +255,6 @@ function formatForecastDay(dateStr){return new Intl.DateTimeFormat('es-CO',{week
 
 async function render(){const hash=location.hash||'#/';try{if(hash.startsWith('#/noticia/')){return article(decodeURIComponent(hash.slice(10)))}if(hash==='#/login')return login();if(hash==='#/admin')return admin();if(hash==='#/contacto')return contact();if(hash==='#/clima')return weatherPage();const cat=hash.startsWith('#/categoria/')?decodeURIComponent(hash.slice(12)).toLowerCase():null;if(hash==='#/noticias'||cat){await loadNews();return newsPage(cat||'')}if(hash==='#/en-vivo'||hash==='#/programacion'){setMeta();await loadPrograms();app.innerHTML=live();bindLive();return}setMeta();await loadNews();await loadPrograms();await loadClients();await loadAds();S.day=null;app.innerHTML=home();bindHome();renderHomeClients();document.getElementById('homeAds')?.replaceWith(document.createRange().createContextualFragment(adsBlock(S.ads)))}catch(e){console.error(e);app.innerHTML=`<div class="error-box"><h2>No se pudo cargar el contenido</h2><p>${esc(e.message||e)}</p><a class="back-link" href="#/">← Volver al inicio</a></div>`}}
 sb.auth.onAuthStateChange(()=>setTimeout(session,0));window.addEventListener('hashchange',render);(async()=>{await session();await render()})();
-})();
 
 // === Publicidad y videos en noticias ===
 async function loadAds(){
@@ -278,3 +277,5 @@ function newsVideo(url){
   if(/\.(mp4|webm|ogg)(\?.*)?$/i.test(u))return `<div class="article-video"><video controls preload="metadata" playsinline src="${esc(u)}"></video></div>`;
   return `<div class="article-video"><iframe src="${esc(u)}" title="Video de la noticia" loading="lazy" allowfullscreen></iframe></div>`;
 }
+
+})();
