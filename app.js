@@ -1,281 +1,3989 @@
-(()=>{'use strict';
-const C=window.__SUPABASE_CONFIG__||{};
-const sb=window.supabase?.createClient(C.url,C.publishableKey);
-const app=document.getElementById('app');
-if(!sb){app.innerHTML='<div class="error-box"><h2>No se pudo inicializar Gamarra TV</h2><p>Revisa la configuración de Supabase.</p></div>';return}
-const DAYS=[['lunes','LUN',1],['martes','MAR',2],['miercoles','MIÉ',3],['jueves','JUE',4],['viernes','VIE',5],['sabado','SÁB',6],['domingo','DOM',7]];
-const CATS=['gamarra','seguridad','judicial','politica','educacion','salud','economia','deportes','region','nacionales','internacionales','entretenimiento'];
-const S={session:null,news:[],programs:[],clients:[],ads:[],day:null};
-const esc=x=>String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-const slugify=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
-const date=v=>v?new Intl.DateTimeFormat('es-CO',{dateStyle:'medium',timeStyle:'short'}).format(new Date(v)):'';
-const shortDate=v=>v?new Intl.DateTimeFormat('es-CO',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(v)):'';
-const time=v=>{if(!v)return'';const [h,m]=String(v).slice(0,5).split(':').map(Number);return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'p.m.':'a.m.'}`};
-const dayInfo=k=>DAYS.find(x=>x[0]===k)||DAYS[0];
-const today=()=>{const jsDay=new Date().getDay();return [7,1,2,3,4,5,6][jsDay]};
-const todayName=()=>DAYS.find(x=>x[2]===today())[0];
-const mins=v=>{if(!v)return null;const [h,m]=String(v).slice(0,5).split(':').map(Number);return Number.isFinite(h)&&Number.isFinite(m)?h*60+m:null};
-function notify(msg,type='success'){const e=document.createElement('div');e.className='alert '+(type==='error'?'alert-error':'alert-success');e.textContent=msg;e.style.cssText='position:fixed;right:16px;bottom:16px;z-index:3000;max-width:460px;box-shadow:0 10px 30px #0003';document.body.appendChild(e);setTimeout(()=>e.remove(),5000)}
-function setMeta(n=null){const baseTitle='Gamarra TV | Noticias y Televisión';const title=n?.titulo?`${n.titulo} | Gamarra TV`:baseTitle;const desc=n?.resumen||'Noticias, televisión y actualidad del sur del Cesar y Magdalena Medio.';const image=n?.imagen_url||'https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png';const url=location.href;document.title=title;for(const [id,val] of [['metaDescription',desc],['ogTitle',title],['ogDescription',desc],['ogImage',image],['ogUrl',url],['twitterTitle',title],['twitterDescription',desc],['twitterImage',image]]){const e=document.getElementById(id);if(e)e.setAttribute('content',val)}}
-async function session(){S.session=(await sb.auth.getSession()).data.session||null;const a=document.getElementById('authLink');if(a){a.textContent=S.session?'⚙️ Panel':'🔒 Iniciar sesión';a.href=S.session?'#/admin':'#/login'}}
-async function loadNews(cat){let q=sb.from('noticias').select('id,titulo,resumen,contenido,imagen_url,video_url,categoria,publicada,created_at,slug').eq('publicada',true).order('created_at',{ascending:false}).limit(50);if(cat)q=q.eq('categoria',cat);let r=await q;if(r.error){const q2=sb.from('noticias').select('id,titulo,resumen,contenido,imagen_url,video_url,categoria,publicada,created_at').eq('publicada',true).order('created_at',{ascending:false}).limit(50);if(cat)q2=q2.eq('categoria',cat);r=await q2}if(r.error)throw r.error;S.news=r.data||[];return S.news}
-async function loadPrograms(){const r=await sb.from('programacion').select('id,dia,dia_semana,hora_inicio,hora_fin,hora,programa,descripcion,imagen_url,activo,created_at').eq('activo',true).order('dia_semana',{ascending:true}).order('hora_inicio',{ascending:true});if(r.error)throw r.error;S.programs=r.data||[];return S.programs}
-async function loadClients(){const r=await sb.from('clientes').select('id,nombre,logo_url,web_url,descripcion,activo,orden,created_at').eq('activo',true).order('orden',{ascending:true}).order('created_at',{ascending:true});if(r.error){console.warn('No se pudo cargar clientes:',r.error.message);S.clients=[];return S.clients}S.clients=r.data||[];return S.clients}
-function newsHref(n){return '#/noticia/'+encodeURIComponent(n.slug||slugify(n.titulo)||n.id)}
-function categoryLabel(c){return ({gamarra:'GAMARRA',seguridad:'SEGURIDAD',judicial:'JUDICIAL',politica:'POLÍTICA',educacion:'EDUCACIÓN',salud:'SALUD',economia:'ECONOMÍA',deportes:'DEPORTES',region:'REGIÓN',nacionales:'NACIONALES',internacionales:'INTERNACIONALES',entretenimiento:'ENTRETENIMIENTO'})[String(c||'').toLowerCase()]||String(c||'NOTICIAS').toUpperCase()}
-function card(n){const image=n.imagen_url?`<img src="${esc(n.imagen_url)}" alt="${esc(n.titulo)}" loading="lazy">`:'<div class="image-fallback">GAMARRA TV</div>';const reading=Math.max(1,Math.ceil(String(n.contenido||n.resumen||'').length/900));return `<article class="news-card"><a href="${newsHref(n)}"><div class="news-image-wrap">${image}<span class="tag">${esc(categoryLabel(n.categoria))}</span></div><div class="news-body"><h3>${esc(n.titulo)}</h3><p>${esc(n.resumen||'Conozca los detalles de esta noticia en Gamarra TV.')}</p><div class="news-meta"><span>◷ ${esc(shortDate(n.created_at))}</span><span>◴ ${reading} min</span></div><div class="read"><span>LEER NOTICIA</span><span class="arrow">→</span></div></div></a></article>`}
-function hero(){const [a,b,c]=S.news;if(!a)return'<div class="empty"><h2>No hay noticias publicadas</h2><p>Las nuevas noticias aparecerán aquí automáticamente.</p></div>';const feature=n=>n?`<a class="feature" href="${newsHref(n)}">${n.imagen_url?`<img src="${esc(n.imagen_url)}" alt="${esc(n.titulo)}">`:''}<div class="feature-content"><span class="tag">${esc(categoryLabel(n.categoria))}</span><h2>${esc(n.titulo)}</h2></div></a>`:'';return `<section class="hero"><div class="container hero-grid"><a class="hero-main" href="${newsHref(a)}">${a.imagen_url?`<img src="${esc(a.imagen_url)}" alt="${esc(a.titulo)}">`:''}<div class="hero-content"><span class="tag">${esc(categoryLabel(a.categoria))}</span><h1>${esc(a.titulo)}</h1><p>${esc(a.resumen||'Noticias y actualidad en Gamarra TV.')}</p><span class="hero-link">Leer noticia →</span></div></a><div class="features">${feature(b)}${feature(c)}</div></div></section>`}
-function scheduleRows(day){const di=dayInfo(day);return S.programs.filter(p=>String(p.dia||'').toLowerCase()===day||Number(p.dia_semana)===di[2]).sort((a,b)=>String(a.hora_inicio||a.hora||'').localeCompare(String(b.hora_inicio||b.hora||'')))}
-function getCurrent(rows,day){if(day!==todayName())return null;const now=new Date();const nowM=now.getHours()*60+now.getMinutes();for(const p of rows){const st=mins(p.hora_inicio||p.hora),en=mins(p.hora_fin);if(st===null)continue;if(en===null&&nowM>=st)return p;if(en!==null){if(en>=st&&nowM>=st&&nowM<en)return p;if(en<st&&(nowM>=st||nowM<en))return p}}return null}
-function getNext(rows,current,day){if(!rows.length||day!==todayName())return null;const nowM=new Date().getHours()*60+new Date().getMinutes();const after=rows.filter(p=>{const st=mins(p.hora_inicio||p.hora);return st!==null&&st>nowM});return after[0]||null}
-function live(){
- const d=S.day||todayName(),rows=scheduleRows(d),current=getCurrent(rows,d),next=getNext(rows,current,d);
- const fallback=C.logo||'https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png';
- const rowsHtml=rows.length?rows.map(p=>{
-   const is=p.id===current?.id, logo=p.imagen_url||fallback;
-   return `<div class="program ${is?'now':''}">
-     <div class="program-logo-wrap"><img class="program-logo" src="${esc(logo)}" alt="Logo de ${esc(p.programa||'programa')}" onerror="this.onerror=null;this.src='${esc(fallback)}'"></div>
-     <div class="program-info">${is?'<div class="now-badge">🔴 AHORA</div>':''}<span class="time">${esc(time(p.hora_inicio||p.hora))}${p.hora_fin?' — '+esc(time(p.hora_fin)):''}</span><strong>${esc(p.programa)}</strong>${p.descripcion?`<small>${esc(p.descripcion)}</small>`:''}</div>
-   </div>`
- }).join(''):'<div class="empty">No hay programación publicada para este día.</div>';
- return `<section class="live-section"><div class="container"><div class="live-title"><div><span class="live-kicker">GTV MEDIOS</span><h2>Gamarra TV <b>EN VIVO</b></h2></div><span class="live-pill"><i></i> SEÑAL EN DIRECTO</span></div><div class="live-layout"><div class="player-column"><div class="player" id="gtvPlayer"><iframe id="gtvOpenCaster" src="https://new.opencaster.com/player/embed?user=gamarratv" title="Gamarra TV en vivo – OpenCaster" allow="autoplay;fullscreen" allowfullscreen loading="eager"></iframe><div class="player-label"><i></i> GTV EN VIVO</div></div><div class="live-note">Señal abierta de Gamarra TV</div></div><aside class="schedule"><div class="schedule-head"><div><span>HOY EN GTV</span><h3>PROGRAMACIÓN</h3></div><span class="schedule-day">${esc(dayInfo(d)[1])}</span></div><div class="days">${DAYS.map(x=>`<button class="day ${d===x[0]?'active':''}" data-day="${x[0]}">${x[1]}</button>`).join('')}</div><div class="schedule-list">${rowsHtml}</div><div class="next-box">${next?`<span>PRÓXIMO</span><strong>${esc(next.programa)}</strong><small>${esc(time(next.hora_inicio||next.hora))}</small>`:`<span>PROGRAMACIÓN</span><strong>${current?'Al aire en este momento':'Fuera de programación'}</strong>`}</div></aside></div></div></section>`
-}
-function newsPage(initialCat=''){
- setMeta();
- const selected=String(initialCat||'').toLowerCase();
- app.innerHTML=`<section class="news-page"><div class="container">
-   <div class="news-page-hero"><div><span class="kicker">GTV NOTICIAS</span><h1>Noticias</h1><p>Encuentra todas las noticias de Gamarra TV en un solo lugar.</p></div><div class="news-page-count" id="newsCount">${S.news.length} noticias</div></div>
-   <div class="news-tools">
-    <div class="news-search-box"><span>🔎</span><input id="newsSearch" type="search" placeholder="Buscar noticias, temas o palabras clave..." autocomplete="off"></div>
-    <div class="news-filter"><label for="newsCategory">CATEGORÍA</label><select id="newsCategory"><option value="">Todas las categorías</option>${CATS.map(x=>`<option value="${x}" ${selected===x?'selected':''}>${esc(categoryLabel(x))}</option>`).join('')}</select></div>
-   </div>
-   <div class="news-category-chips" id="newsChips"><button class="news-chip active" data-cat="">Todas</button>${CATS.map(x=>`<button class="news-chip" data-cat="${x}">${esc(categoryLabel(x))}</button>`).join('')}</div>
-   <div class="category-news-grid news-search-grid" id="newsResults"></div>
- </div></section>`;
- const input=document.getElementById('newsSearch'),select=document.getElementById('newsCategory'),results=document.getElementById('newsResults'),count=document.getElementById('newsCount');
- const chips=[...document.querySelectorAll('.news-chip')];
- let activeCat=selected;
- function paint(){
-   const term=String(input.value||'').trim().toLowerCase();
-   const filtered=S.news.filter(n=>{
-     const cat=String(n.categoria||'').toLowerCase();
-     if(activeCat&&cat!==activeCat)return false;
-     if(!term)return true;
-     return [n.titulo,n.resumen,n.contenido,n.categoria].some(v=>String(v||'').toLowerCase().includes(term));
-   });
-   results.innerHTML=filtered.length?filtered.map(card).join(''):`<div class="empty news-empty"><h2>No encontramos noticias</h2><p>Prueba con otra palabra o selecciona otra categoría.</p></div>`;
-   count.textContent=`${filtered.length} ${filtered.length===1?'noticia':'noticias'}`;
-   select.value=activeCat;
-   chips.forEach(c=>c.classList.toggle('active',c.dataset.cat===activeCat));
- }
- input.oninput=paint;
- select.onchange=()=>{activeCat=select.value;paint()};
- chips.forEach(ch=>ch.onclick=()=>{activeCat=ch.dataset.cat;paint()});
- paint();
-}
-function home(){
- const topics=S.news.slice(0,8);
- const latest=S.news.slice(0,8);
- const heroNews=S.news.slice(0,3);
- const topicHtml=topics.length?topics.map(n=>`<a class="topic-item" href="${newsHref(n)}">${esc(n.titulo)}</a>`).join(''):'<span class="topic-empty">Noticias y actualidad de Gamarra TV</span>';
- const latestHtml=latest.length?latest.map(card).join(''):'<div class="empty"><h2>No hay noticias publicadas</h2><p>Las noticias publicadas aparecerán aquí.</p></div>';
- const main=heroNews[0], side1=heroNews[1], side2=heroNews[2];
- const feature=(n,cls='')=>n?`<a class="home-feature ${cls}" href="${newsHref(n)}">${n.imagen_url?`<img src="${esc(n.imagen_url)}" alt="${esc(n.titulo)}">`:''}<div class="home-feature-overlay"><span class="tag">${esc(categoryLabel(n.categoria))}</span><h2>${esc(n.titulo)}</h2><small>${esc(shortDate(n.created_at))}</small></div></a>`:'';
- return `<div class="signal-inspired-home">
-  <section class="topics-bar"><div class="container topics-inner"><strong>Temas del día</strong><div class="topics-list">${topicHtml}</div></div></section>
-  <section class="home-intro"><div class="container"><div class="brand-kicker">GAMARRA TV</div><h1>Noticias, televisión y actualidad</h1><p>Información de Gamarra, el sur del Cesar y el Magdalena Medio.</p></div></section>
-  <section class="home-features"><div class="container home-feature-grid"><div>${feature(main,'home-feature-main')}</div><div class="home-feature-side">${feature(side1)}${feature(side2)}</div></div></section>
-  ${live()}
-  <section class="section latest-home"><div class="container"><div class="section-head"><div><span class="kicker">GTV NOTICIAS</span><h2>Últimas noticias</h2><p class="section-subtitle">Las noticias más recientes publicadas por Gamarra TV.</p></div><div class="carousel-btns"><button id="prev" aria-label="Noticias anteriores">←</button><button id="next" aria-label="Más noticias">→</button></div></div><div class="category-strip"><a class="category-pill active" href="#/noticias">Todas</a>${CATS.map(c=>`<a class="category-pill" href="#/categoria/${c}">${esc(categoryLabel(c))}</a>`).join('')}</div><div class="news-carousel" id="carousel">${latestHtml}</div></div></section>
-  ${homeSections()}
-  <div id="homeAds"></div>
-  <section class="services-section"><div class="container"><div class="section-head"><div><span class="kicker">GAMARRA TV</span><h2>Productos y Servicios</h2><p class="section-subtitle">Soluciones de comunicación, tecnología y transmisión para empresas, organizaciones y proyectos.</p></div></div><div class="services-grid"><article class="service-card"><div class="service-icon">🧠</div><h3>Servicios Profesionales</h3><p>Consultoría experta en medios de comunicación, telecomunicaciones y emprendimientos digitales.</p><a class="service-btn" href="https://wa.me/573027820622?text=Hola%2C%20quiero%20m%C3%A1s%20informaci%C3%B3n%20sobre%20Servicios%20Profesionales" target="_blank" rel="noopener">💬 Contratar</a></article><article class="service-card"><div class="service-icon">💻</div><h3>Diseño Web y Apps</h3><p>Desarrollamos sitios web, apps móviles y plataformas adaptadas a tus necesidades.</p><a class="service-btn" href="https://wa.me/573027820622?text=Hola%2C%20quiero%20cotizar%20Dise%C3%B1o%20Web%20y%20Apps" target="_blank" rel="noopener">💬 Contratar</a></article><article class="service-card"><div class="service-icon">📡</div><h3>Streaming</h3><p>Soluciones para transmisiones en vivo, radio online y canales digitales en alta calidad.</p><a class="service-btn" href="https://wa.me/573027820622?text=Hola%2C%20me%20interesa%20el%20servicio%20de%20Streaming" target="_blank" rel="noopener">💬 Contratar</a></article></div></div></section>
-  <section class="clients-section"><div class="container"><div class="section-head"><div><span class="kicker">GAMARRA TV</span><h2>Nuestros clientes</h2><p class="section-subtitle">Empresas y organizaciones que confían en nuestros servicios y soluciones.</p></div></div><div id="clientsHome" class="clients-grid"><div class="client-loading">Cargando clientes...</div></div></div></section>
-  <section class="home-directory"><div class="container"><div class="directory-card"><div><span class="kicker">GAMARRA TV</span><h2>Todo Gamarra TV en un solo lugar</h2><p>Consulta noticias, programación, clima, señal en vivo y formas de contacto.</p></div><div class="directory-links"><a href="#/noticias">📰 Noticias</a><a href="#/en-vivo">🔴 En vivo</a><a href="#/clima">☀️ Clima</a><a href="#/contacto">✉️ Contacto</a></div></div></div></section>
- </div>`;
-}
-function renderHomeClients(){const box=document.getElementById('clientsHome');if(!box)return;const list=S.clients.length?S.clients:[{id:'default-jdi',nombre:'JDI El Contento',logo_url:'https://i.ibb.co/CphNqfMq/Chat-GPT-Image-14-sept-2026-11-0.png',web_url:'https://jdielcontento.blogspot.com/',descripcion:'Cliente de Gamarra TV'}];box.innerHTML=list.map(c=>`<a class="client-card" href="${esc(c.web_url||'#')}" target="_blank" rel="noopener"><div class="client-logo"><img src="${esc(c.logo_url||C.logo)}" alt="Logo de ${esc(c.nombre)}" loading="lazy" onerror="this.onerror=null;this.src='${esc(C.logo)}'"></div><div class="client-info"><h3>${esc(c.nombre)}</h3>${c.descripcion?`<p>${esc(c.descripcion)}</p>`:''}<span>Visitar sitio web →</span></div></a>`).join('')}
+/* =========================================================
+   GAMARRA TV
+   app.js
+========================================================= */
 
-function homeSections(){return `<section class="section category-sections"><div class="container">${CATS.map(cat=>{const items=S.news.filter(n=>String(n.categoria||'').toLowerCase()===cat).slice(0,4);if(!items.length)return '';return `<div class="news-category-section"><div class="section-head compact"><div><span class="kicker">GTV NOTICIAS</span><h2>${esc(categoryLabel(cat))}</h2></div><a class="section-more" href="#/categoria/${cat}">Ver todas →</a></div><div class="section-news-grid">${items.map(card).join('')}</div></div>`}).join('')}</div></section>`}
-function bindHome(){bindLive();const p=document.getElementById('prev'),n=document.getElementById('next'),c=document.getElementById('carousel');if(p)p.onclick=()=>c.scrollBy({left:-390,behavior:'smooth'});if(n)n.onclick=()=>c.scrollBy({left:390,behavior:'smooth'});const first=S.news[0];if(first)document.getElementById('breakingText').textContent=first.titulo}
-function bindLive(){document.querySelectorAll('.day').forEach(b=>b.onclick=()=>{S.day=b.dataset.day;render()})}
-async function findArticle(key){let r=await sb.from('noticias').select('id,titulo,resumen,contenido,imagen_url,video_url,categoria,publicada,created_at,slug').eq('publicada',true);if(r.error)throw r.error;const rows=r.data||[];return rows.find(n=>String(n.slug||'')===key)||rows.find(n=>String(n.id)===key)||rows.find(n=>slugify(n.titulo)===key)}
-function shareArticle(n){const url=location.href;const text=`${n.titulo} — Gamarra TV`;const share=async()=>{try{if(navigator.share){await navigator.share({title:n.titulo,text:`${n.resumen||'Lee la noticia en Gamarra TV.'}\n\n${text}`,url});notify('Compartido correctamente')}else{await navigator.clipboard.writeText(url);notify('Enlace copiado para compartir')}}catch(e){if(e.name!=='AbortError')notify('No se pudo compartir','error')}};return `<div class="share-row"><button class="share-main" id="shareNews">↗ COMPARTIR NOTICIA</button><button class="share-copy" id="copyNews">🔗 Copiar enlace</button></div>`}
-async function article(key){const n=await findArticle(key);if(!n){setMeta();app.innerHTML='<div class="error-box"><h2>Noticia no encontrada</h2><p>La noticia que buscas no está disponible.</p><a class="back-link" href="#/">← Volver al inicio</a></div>';return}setMeta(n);const paragraphs=String(n.contenido||'').split(/\n+/).filter(Boolean).map(p=>`<p>${esc(p)}</p>`).join('');app.innerHTML=`<article class="article"><div class="article-inner"><a class="back-link" href="#/">← Volver a noticias</a><span class="tag">${esc(categoryLabel(n.categoria))}</span><h1>${esc(n.titulo)}</h1><div class="summary">${esc(n.resumen||'')}</div><div class="date">Publicado el ${esc(date(n.created_at))}</div>${n.imagen_url?`<img class="main-image" src="${esc(n.imagen_url)}" alt="${esc(n.titulo)}">`:''}${newsVideo(n.video_url)}<div class="article-tools">${shareArticle(n)}</div><div class="article-content">${paragraphs}</div><div class="article-bottom-share">${shareArticle(n)}</div></div></article>`;const share=async()=>{const url=location.href;try{if(navigator.share)await navigator.share({title:n.titulo,text:`${n.resumen||'Lee esta noticia en Gamarra TV.'}\n${url}`,url});else{await navigator.clipboard.writeText(url);notify('Enlace copiado para compartir')}}catch(e){if(e.name!=='AbortError')notify('No se pudo compartir','error')}};document.querySelectorAll('#shareNews').forEach(x=>x.onclick=share);document.querySelectorAll('#copyNews').forEach(x=>x.onclick=async()=>{try{await navigator.clipboard.writeText(location.href);notify('Enlace de la noticia copiado')}catch(e){notify('No se pudo copiar el enlace','error')}})}
-function login(){setMeta();app.innerHTML=`<section class="login-page"><div class="container narrow"><div class="panel login-panel"><span class="kicker">GTV PANEL</span><h1>🔒 Iniciar sesión</h1><p>Accede para publicar noticias y administrar la programación de Gamarra TV.</p><form id="loginForm"><div class="field"><label>Correo</label><input type="email" name="email" autocomplete="email" required></div><div class="field"><label>Contraseña</label><input type="password" name="password" autocomplete="current-password" required></div><button class="btn btn-dark">Iniciar sesión</button></form><div id="loginMsg"></div></div></div></section>`;document.getElementById('loginForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget);const r=await sb.auth.signInWithPassword({email:f.get('email'),password:f.get('password')});if(r.error){document.getElementById('loginMsg').innerHTML=`<div class="alert alert-error">${esc(r.error.message)}</div>`;return}S.session=r.data.session;await session();location.hash='#/admin'}}
-async function admin(){
- if(!S.session){location.hash='#/login';return}
- const [nr,pr,cr,ar]=await Promise.all([
-  sb.from('noticias').select('*').order('created_at',{ascending:false}).limit(100),
-  sb.from('programacion').select('*').order('dia_semana').order('hora_inicio'),
-  sb.from('clientes').select('*').order('orden').order('created_at'),
-  sb.from('publicidad').select('*').order('orden').order('created_at')
- ]);
- if(nr.error) throw nr.error;
- if(pr.error) throw pr.error;
- const news=nr.data||[], programs=pr.data||[], clients=cr.error?[]:(cr.data||[]), ads=ar.error?[]:(ar.data||[]);
- app.innerHTML=`<section class="admin"><div class="container"><div class="panel">
- <div class="section-head"><div><span class="kicker">PANEL ADMINISTRATIVO</span><h2>Administrar Gamarra TV</h2><p class="section-subtitle">Publica, edita y elimina noticias y programas desde este mismo panel.</p></div><button id="logout" class="btn btn-dark">Cerrar sesión</button></div>
- <div id="adminMsg"></div>
- <div class="admin-section"><div class="admin-section-head"><div><span class="kicker">CONTENIDOS</span><h3>📰 Noticias</h3></div><button id="cancelNewsEdit" class="btn btn-light hidden">Cancelar edición</button></div>
- <form id="newsForm" class="form-grid"><input type="hidden" name="news_id" value=""><div class="field full"><label>Título</label><input name="titulo" required></div><div class="field"><label>Categoría</label><select name="categoria">${CATS.map(x=>`<option value="${x}">${categoryLabel(x)}</option>`).join('')}</select></div><div class="field"><label>Imagen URL</label><input name="imagen_url" type="url" placeholder="https://..."></div><div class="field full"><label>🎥 Video de la noticia (YouTube, Vimeo o MP4)</label><input name="video_url" type="url" placeholder="https://www.youtube.com/watch?v=..."></div><div class="field full"><label>Resumen</label><textarea name="resumen" placeholder="Breve resumen para la portada y compartir."></textarea></div><div class="field full"><label>Contenido</label><textarea name="contenido" required placeholder="Escribe el cuerpo completo de la noticia."></textarea></div><div class="field full"><label>Slug</label><input name="slug" placeholder="Se genera automáticamente desde el título"></div><div><label><input type="checkbox" name="publicada" checked> Publicar inmediatamente</label></div><div class="field full"><button id="newsSubmit" class="btn btn-primary">📤 Publicar noticia</button></div></form>
- <div class="admin-list"><h4>Noticias publicadas y borradores</h4>${news.length?news.map(n=>`<div class="admin-item"><div class="admin-item-media">${n.imagen_url?`<img src="${esc(n.imagen_url)}" alt="">`:'<div class="admin-no-image">GTV</div>'}</div><div class="admin-item-info"><span class="tag admin-tag">${esc(categoryLabel(n.categoria))}</span><h4>${esc(n.titulo)}</h4><small>${esc(shortDate(n.created_at))} · ${n.publicada?'Publicada':'Borrador'}</small></div><div class="admin-actions"><button class="btn btn-edit edit-news" data-id="${esc(n.id)}">✏️ Editar</button><button class="btn btn-danger delete-news" data-id="${esc(n.id)}">🗑️ Eliminar</button></div></div>`).join(''):'<div class="empty-admin">No hay noticias registradas.</div>'}</div></div>
- <hr>
- <div class="admin-section"><div class="admin-section-head"><div><span class="kicker">TV</span><h3>📺 Programación</h3></div><button id="cancelProgEdit" class="btn btn-light hidden">Cancelar edición</button></div>
- <form id="progForm" class="form-grid"><input type="hidden" name="programacion_id" value=""><div class="field"><label>Día</label><select name="dia">${DAYS.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}</select></div><div class="field"><label>Programa</label><input name="programa" required>
-          <label>Logo / imagen del programa
-            <input name="program_imagen_url" type="url" placeholder="https://...">
-          </label></div><div class="field"><label>Hora inicio</label><input name="hora_inicio" type="time" required></div><div class="field"><label>Hora final</label><input name="hora_fin" type="time" required></div><div class="field full"><label>Descripción</label><input name="descripcion"></div><div><label><input type="checkbox" name="activo" checked> Activo</label></div><div class="field full"><button id="progSubmit" class="btn btn-primary">📺 Guardar programa</button></div></form>
- <div class="admin-list"><h4>Programas registrados</h4>${programs.length?programs.map(x=>`<div class="admin-item"><div class="admin-item-media">${x.imagen_url?`<img src="${esc(x.imagen_url)}" alt="" onerror="this.style.display='none'">`:'<div class="program-icon">📺</div>'}</div><div class="admin-item-info"><span class="admin-day">${esc(dayInfo(String(x.dia||'').toLowerCase())[1])}</span><h4>${esc(x.programa)}</h4><small>${esc(time(x.hora_inicio||x.hora))}${x.hora_fin?' — '+esc(time(x.hora_fin)) : ''} · ${x.activo?'Activo':'Inactivo'}</small></div><div class="admin-actions"><button class="btn btn-edit edit-program" data-id="${esc(x.id)}">✏️ Editar</button><button class="btn btn-danger delete-program" data-id="${esc(x.id)}">🗑️ Eliminar</button></div></div>`).join(''):'<div class="empty-admin">No hay programas registrados.</div>'}</div></div>
- <hr><div class="admin-section"><div class="admin-section-head"><div><span class="kicker">ALIANZAS</span><h3>🤝 Nuestros clientes</h3></div><button id="cancelClientEdit" class="btn btn-light hidden">Cancelar edición</button></div><form id="clientForm" class="form-grid"><input type="hidden" name="cliente_id" value=""><div class="field"><label>Nombre del cliente</label><input name="nombre" required placeholder="Ej. JDI El Contento"></div><div class="field"><label>Logo URL</label><input name="logo_url" type="url" required placeholder="https://..."></div><div class="field"><label>Página web</label><input name="web_url" type="url" required placeholder="https://..."></div><div class="field"><label>Orden</label><input name="orden" type="number" min="0" value="1"></div><div class="field full"><label>Descripción</label><textarea name="descripcion" rows="3" placeholder="Breve descripción del cliente"></textarea></div><div><label><input type="checkbox" name="activo" checked> Mostrar en la página</label></div><div class="field full"><button id="clientSubmit" class="btn btn-primary">🤝 Guardar cliente</button></div></form><div class="admin-list"><h4>Clientes registrados</h4>${clients.length?clients.map(c=>`<div class="admin-item"><div class="admin-item-media client-admin-logo">${c.logo_url?`<img src="${esc(c.logo_url)}" alt="" onerror="this.style.display='none'">`:'<div class="program-icon">🤝</div>'}</div><div class="admin-item-info"><h4>${esc(c.nombre)}</h4><small>${esc(c.web_url||'')} · ${c.activo?'Visible':'Oculto'} · Orden ${esc(c.orden??0)}</small></div><div class="admin-actions"><button class="btn btn-edit edit-client" data-id="${esc(c.id)}">✏️ Editar</button><button class="btn btn-danger delete-client" data-id="${esc(c.id)}">🗑️ Eliminar</button></div></div>`).join(''):'<div class="empty-admin">No hay clientes registrados. El cliente destacado por defecto aparecerá en la portada hasta crear la tabla y registrar clientes.</div>'}</div></div>
- <hr><div class="admin-section"><div class="admin-section-head"><div><span class="kicker">PUBLICIDAD</span><h3>📢 Publicidad</h3></div><button id="cancelAdEdit" class="btn btn-light hidden">Cancelar edición</button></div><form id="adForm" class="form-grid"><input type="hidden" name="ad_id" value=""><div class="field"><label>Título</label><input name="titulo" required placeholder="Ej. Publicidad local"></div><div class="field"><label>Imagen de publicidad (URL)</label><input name="imagen_url" type="url" required placeholder="https://..."></div><div class="field"><label>Enlace al hacer clic</label><input name="enlace_url" type="url" placeholder="https://..."></div><div class="field"><label>Orden</label><input name="orden" type="number" min="0" value="1"></div><div class="field full"><label>Descripción</label><textarea name="descripcion" rows="2" placeholder="Texto opcional"></textarea></div><div><label><input type="checkbox" name="activo" checked> Mostrar publicidad</label></div><div class="field full"><button id="adSubmit" class="btn btn-primary">📢 Guardar publicidad</button></div></form><div class="admin-list"><h4>Publicidades registradas</h4>${ads.length?ads.map(a=>`<div class="admin-item"><div class="admin-item-media">${a.imagen_url?`<img src="${esc(a.imagen_url)}" alt="">`:'<div class="admin-no-image">AD</div>'}</div><div class="admin-item-info"><h4>${esc(a.titulo)}</h4><small>${a.activo?'Visible':'Oculta'} · Orden ${esc(a.orden??0)}</small></div><div class="admin-actions"><button class="btn btn-edit edit-ad" data-id="${esc(a.id)}">✏️ Editar</button><button class="btn btn-danger delete-ad" data-id="${esc(a.id)}">🗑️ Eliminar</button></div></div>`).join(''):'<div class="empty-admin">No hay publicidad registrada.</div>'}</div></div>
- <div class="admin-help"><b>URLs de noticias:</b> se generan automáticamente con el título, por ejemplo <code>#/noticia/joven-de-21-anos-fue-asesinado</code>.</div>
- </div></div></section>`;
- document.getElementById('logout').onclick=async()=>{await sb.auth.signOut();S.session=null;location.hash='#/'};
- document.getElementById('newsForm').onsubmit=saveNews;
- document.getElementById('progForm').onsubmit=saveProg;
- document.querySelectorAll('.edit-news').forEach(b=>b.onclick=()=>editNews(b.dataset.id,news));
- document.querySelectorAll('.delete-news').forEach(b=>b.onclick=()=>deleteNews(b.dataset.id));
- document.querySelectorAll('.edit-program').forEach(b=>b.onclick=()=>editProgram(b.dataset.id,programs));
- document.querySelectorAll('.delete-program').forEach(b=>b.onclick=()=>deleteProgram(b.dataset.id));
- document.querySelectorAll('.edit-client').forEach(b=>b.onclick=()=>editClient(b.dataset.id,clients));
- document.querySelectorAll('.delete-client').forEach(b=>b.onclick=()=>deleteClient(b.dataset.id));
- document.querySelectorAll('.edit-ad').forEach(b=>b.onclick=()=>editAd(b.dataset.id,ads));
- document.querySelectorAll('.delete-ad').forEach(b=>b.onclick=()=>deleteAd(b.dataset.id));
- document.getElementById('cancelNewsEdit').onclick=resetNewsForm;
- document.getElementById('clientForm').onsubmit=saveClient;
- document.getElementById('adForm').onsubmit=saveAd;
- document.getElementById('cancelAdEdit').onclick=resetAdForm;
- document.getElementById('cancelClientEdit').onclick=resetClientForm;
- document.getElementById('cancelProgEdit').onclick=resetProgForm;
-}
-function resetNewsForm(){const f=document.getElementById('newsForm');if(!f)return;f.reset();f.elements.news_id.value='';f.elements.publicada.checked=true;document.getElementById('newsSubmit').textContent='📤 Publicar noticia';document.getElementById('cancelNewsEdit').classList.add('hidden')}
-function resetProgForm(){const f=document.getElementById('progForm');if(!f)return;f.reset();f.elements.programacion_id.value='';f.elements.activo.checked=true;document.getElementById('progSubmit').textContent='📺 Guardar programa';document.getElementById('cancelProgEdit').classList.add('hidden')}
-function editNews(id,news){const n=news.find(x=>String(x.id)===String(id));if(!n)return;const f=document.getElementById('newsForm');f.elements.news_id.value=n.id;f.elements.titulo.value=n.titulo||'';f.elements.categoria.value=n.categoria||'gamarra';f.elements.imagen_url.value=n.imagen_url||'';if(f.elements.video_url)f.elements.video_url.value=n.video_url||'';f.elements.resumen.value=n.resumen||'';f.elements.contenido.value=n.contenido||'';f.elements.slug.value=n.slug||slugify(n.titulo);f.elements.publicada.checked=!!n.publicada;document.getElementById('newsSubmit').textContent='💾 Guardar cambios';document.getElementById('cancelNewsEdit').classList.remove('hidden');f.scrollIntoView({behavior:'smooth',block:'center'})}
-function resetClientForm(){const f=document.getElementById('clientForm');if(!f)return;f.reset();f.elements.cliente_id.value='';f.elements.orden.value=1;f.elements.activo.checked=true;document.getElementById('clientSubmit').textContent='🤝 Guardar cliente';document.getElementById('cancelClientEdit').classList.add('hidden')}
-function editClient(id,clients){const c=clients.find(x=>String(x.id)===String(id));if(!c)return;const f=document.getElementById('clientForm');f.elements.cliente_id.value=c.id;f.elements.nombre.value=c.nombre||'';f.elements.logo_url.value=c.logo_url||'';f.elements.web_url.value=c.web_url||'';f.elements.descripcion.value=c.descripcion||'';f.elements.orden.value=c.orden??1;f.elements.activo.checked=c.activo!==false;document.getElementById('clientSubmit').textContent='💾 Guardar cambios';document.getElementById('cancelClientEdit').classList.remove('hidden');f.scrollIntoView({behavior:'smooth',block:'center'})}
-function resetAdForm(){const f=document.getElementById('adForm');if(!f)return;f.reset();f.elements.ad_id.value='';f.elements.orden.value=1;f.elements.activo.checked=true;document.getElementById('adSubmit').textContent='📢 Guardar publicidad';document.getElementById('cancelAdEdit').classList.add('hidden')}
-function editAd(id,ads){const a=ads.find(x=>String(x.id)===String(id));if(!a)return;const f=document.getElementById('adForm');f.elements.ad_id.value=a.id;f.elements.titulo.value=a.titulo||'';f.elements.imagen_url.value=a.imagen_url||'';f.elements.enlace_url.value=a.enlace_url||'';f.elements.orden.value=a.orden??0;f.elements.descripcion.value=a.descripcion||'';f.elements.activo.checked=!!a.activo;document.getElementById('adSubmit').textContent='💾 Guardar cambios';document.getElementById('cancelAdEdit').classList.remove('hidden');f.scrollIntoView({behavior:'smooth',block:'center'})}
-async function saveAd(e){e.preventDefault();if(!S.session){notify('Debes iniciar sesión','error');return}const f=new FormData(e.currentTarget),id=String(f.get('ad_id')||'').trim(),data={titulo:String(f.get('titulo')||'').trim(),imagen_url:String(f.get('imagen_url')||'').trim(),enlace_url:String(f.get('enlace_url')||'').trim()||null,descripcion:String(f.get('descripcion')||'').trim()||null,orden:Number(f.get('orden')||0),activo:f.get('activo')==='on'};if(!data.titulo||!data.imagen_url){notify('Título e imagen son obligatorios','error');return}const r=id?await sb.from('publicidad').update(data).eq('id',id):await sb.from('publicidad').insert(data);if(r.error){notify('No se pudo guardar la publicidad: '+r.error.message,'error');return}notify(id?'Publicidad actualizada correctamente':'Publicidad guardada correctamente');resetAdForm();await admin()}
-async function deleteAd(id){if(!S.session)return;if(!confirm('¿Seguro que deseas eliminar esta publicidad?'))return;const r=await sb.from('publicidad').delete().eq('id',id);if(r.error){notify('No se pudo eliminar la publicidad: '+r.error.message,'error');return}notify('Publicidad eliminada correctamente');await admin()}
-async function saveClient(e){e.preventDefault();if(!S.session)return;const f=new FormData(e.currentTarget),id=String(f.get('cliente_id')||'').trim(),data={nombre:String(f.get('nombre')||'').trim(),logo_url:String(f.get('logo_url')||'').trim(),web_url:String(f.get('web_url')||'').trim(),descripcion:String(f.get('descripcion')||'').trim()||null,orden:Number(f.get('orden')||0),activo:f.get('activo')==='on'};if(!data.nombre||!data.logo_url||!data.web_url){notify('Completa nombre, logo y página web','error');return}const r=id?await sb.from('clientes').update(data).eq('id',id):await sb.from('clientes').insert(data);if(r.error){notify('No se pudo guardar el cliente: '+r.error.message,'error');return}notify(id?'Cliente actualizado correctamente':'Cliente agregado correctamente');resetClientForm();await admin()}
-async function deleteClient(id){if(!S.session)return;if(!confirm('¿Seguro que deseas eliminar este cliente?'))return;const r=await sb.from('clientes').delete().eq('id',id);if(r.error){notify('No se pudo eliminar el cliente: '+r.error.message,'error');return}notify('Cliente eliminado correctamente');await admin()}
-async function deleteNews(id){if(!S.session)return;if(!confirm('¿Seguro que deseas eliminar esta noticia? Esta acción no se puede deshacer.'))return;const r=await sb.from('noticias').delete().eq('id',id);if(r.error){notify(r.error.message,'error');return}notify('Noticia eliminada correctamente');await admin()}
-function editProgram(id,programs){const x=programs.find(p=>String(p.id)===String(id));if(!x)return;const f=document.getElementById('progForm');f.elements.programacion_id.value=x.id;f.elements.dia.value=x.dia||DAYS.find(d=>d[2]===Number(x.dia_semana))?.[0]||'lunes';f.elements.programa.value=x.programa||'';const logoInput=f.elements.program_imagen_url;if(logoInput)logoInput.value=x.imagen_url||'';f.elements.hora_inicio.value=String(x.hora_inicio||x.hora||'').slice(0,5);f.elements.hora_fin.value=String(x.hora_fin||'').slice(0,5);f.elements.descripcion.value=x.descripcion||'';f.elements.activo.checked=x.activo!==false;document.getElementById('progSubmit').textContent='💾 Guardar cambios';document.getElementById('cancelProgEdit').classList.remove('hidden');f.scrollIntoView({behavior:'smooth',block:'center'})}
-async function deleteProgram(id){if(!S.session)return;if(!confirm('¿Seguro que deseas eliminar este programa? Esta acción no se puede deshacer.'))return;const r=await sb.from('programacion').delete().eq('id',id);if(r.error){notify(r.error.message,'error');return}notify('Programa eliminado correctamente');await admin()}
-async function saveNews(e){
- e.preventDefault();if(!S.session){notify('Debes iniciar sesión','error');return}
- const f=new FormData(e.currentTarget),id=String(f.get('news_id')||'').trim(),titulo=String(f.get('titulo')||'').trim(),contenido=String(f.get('contenido')||'').trim();
- if(!titulo||!contenido){notify('Título y contenido son obligatorios','error');return}
- let slug=slugify(f.get('slug')||titulo)||`noticia-${Date.now()}`;
- if(!id){const check=await sb.from('noticias').select('id').eq('slug',slug).limit(1);if(!check.error&&check.data?.length)slug=`${slug}-${Date.now().toString().slice(-6)}`}
- const data={titulo,slug,resumen:String(f.get('resumen')||'').trim()||null,contenido,imagen_url:String(f.get('imagen_url')||'').trim()||null,video_url:String(f.get('video_url')||'').trim()||null,categoria:String(f.get('categoria')||'gamarra').toLowerCase(),publicada:f.get('publicada')==='on'};
- const r=id?await sb.from('noticias').update(data).eq('id',id):await sb.from('noticias').insert(data);
- if(r.error){console.error('Error al guardar noticia:',r.error);notify(`No se pudo guardar la noticia: ${r.error.message||'Error de Supabase'}`,'error');return}
- notify(id?'Noticia actualizada correctamente':'Noticia publicada correctamente');resetNewsForm();await admin()
-}
-async function saveProg(e){
- e.preventDefault();if(!S.session){notify('Debes iniciar sesión','error');return}
- const f=new FormData(e.currentTarget),id=String(f.get('programacion_id')||'').trim(),dia=String(f.get('dia')),di=dayInfo(dia),data={dia,dia_semana:di[2],hora_inicio:f.get('hora_inicio'),hora_fin:f.get('hora_fin'),hora:f.get('hora_inicio'),programa:String(f.get('programa')||'').trim(),descripcion:String(f.get('descripcion')||'').trim()||null,imagen_url:String(f.get('program_imagen_url')||'').trim()||null,activo:f.get('activo')==='on'};
- if(!data.programa||!data.hora_inicio||!data.hora_fin){notify('Día, programa y horarios son obligatorios','error');return}
- const r=id?await sb.from('programacion').update(data).eq('id',id):await sb.from('programacion').insert(data);
- if(r.error){notify(r.error.message,'error');return}
- notify(id?'Programa actualizado correctamente':'Programa guardado correctamente');resetProgForm();await admin()
+
+/* =========================================================
+   CONFIGURACIÓN SUPABASE
+========================================================= */
+
+/*
+  IMPORTANTE:
+
+  Cambia solamente SUPABASE_URL.
+
+  Ejemplo:
+
+  const SUPABASE_URL =
+    "https://xxxxxxxxxxxxxxxx.supabase.co";
+
+  Tu Publishable Key ya está colocada.
+*/
+
+const SUPABASE_URL =
+  "PEGA_AQUI_LA_URL_DE_TU_PROYECTO_SUPABASE";
+
+const SUPABASE_PUBLISHABLE_KEY =
+  "sb_publishable_tXJAIc_OeskuGOgXB_7pfg_HyVjbGsK";
+
+
+/* =========================================================
+   DATOS DE GAMARRA TV
+========================================================= */
+
+const SITE_NAME = "Gamarra TV";
+
+const SITE_URL =
+  window.location.origin;
+
+const LOGO_URL =
+  "https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png";
+
+const WHATSAPP =
+  "573027820622";
+
+const PHONE =
+  "3027820622";
+
+const EMAIL =
+  "gamarratv02@gmail.com";
+
+const OPENCASTER_URL =
+  "https://new.opencaster.com/player/embed?user=gamarratv";
+
+
+/* =========================================================
+   CATEGORÍAS
+========================================================= */
+
+const CATEGORIES = [
+  "Gamarra",
+  "Seguridad",
+  "Judicial",
+  "Política",
+  "Educación",
+  "Salud",
+  "Economía",
+  "Deportes",
+  "Región",
+  "Nacionales",
+  "Internacionales",
+  "Entretenimiento"
+];
+
+
+const DAY_NAMES = {
+  1: "LUN",
+  2: "MAR",
+  3: "MIÉ",
+  4: "JUE",
+  5: "VIE",
+  6: "SÁB",
+  7: "DOM"
+};
+
+
+/* =========================================================
+   SUPABASE
+========================================================= */
+
+let supabase = null;
+
+if (
+  SUPABASE_URL &&
+  !SUPABASE_URL.startsWith("PEGA_AQUI")
+) {
+
+  supabase =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY,
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true
+        }
+      }
+    );
+
 }
 
-function contact(){
- setMeta();
- app.innerHTML=`<section class="contact-page">
-   <div class="container">
-    <div class="contact-hero">
-      <span class="contact-kicker">GAMARRA TV</span>
-      <h1>Estamos para escucharte</h1>
-      <p>¿Tienes una noticia, una denuncia, una propuesta comercial o quieres comunicarte con nuestro equipo? Estamos disponibles para recibir tus mensajes.</p>
-    </div>
-    <div class="contact-layout">
-      <div class="contact-main">
-        <span class="kicker">GAMARRA TV</span><h2>COMUNÍCATE CON NOSOTROS</h2>
-        <p class="contact-intro">Gamarra TV es un medio de comunicación local comprometido con informar, conectar y dar voz a nuestra comunidad.</p>
-        <div class="contact-cards">
-          <a class="contact-card" href="https://wa.me/573027820622" target="_blank" rel="noopener"><div class="contact-icon whatsapp">💬</div><div><strong>WhatsApp</strong><span>302 782 0622</span></div></a>
-          <a class="contact-card" href="tel:+573027820622"><div class="contact-icon phone">📞</div><div><strong>Teléfono</strong><span>302 782 0622</span></div></a>
-          <a class="contact-card" href="mailto:gamarratv02@gmail.com"><div class="contact-icon mail">✉</div><div><strong>Correo electrónico</strong><span>gamarratv02@gmail.com</span></div></a>
-          <div class="contact-card"><div class="contact-icon coverage">📍</div><div><strong>Cobertura</strong><span>Gamarra · Sur del Cesar · Magdalena Medio · Región</span></div></div>
-        </div>
-        <div class="contact-message"><span>GTV</span><strong>Tu canal, tu comunidad, nuestra voz.</strong><small>Gamarra TV · Noticias, televisión y actualidad</small></div>
-      </div>
-      <aside class="contact-side">
-        <div class="side-title"><span class="kicker">CONTACTO</span><h3>GAMARRA TV</h3><p>Conéctate con nuestro equipo</p></div>
-        <a href="https://wa.me/573027820622" target="_blank" rel="noopener" class="side-action"><b>💬</b><span><strong>WhatsApp</strong><small>Enviar mensaje</small></span><i>→</i></a>
-        <a href="mailto:gamarratv02@gmail.com" class="side-action"><b>✉</b><span><strong>Correo</strong><small>gamarratv02@gmail.com</small></span><i>→</i></a>
-        <a href="#/clima" class="side-action"><b>☀️</b><span><strong>El clima</strong><small>Consulta el tiempo en Gamarra</small></span><i>→</i></a>
-      </aside>
-    </div>
-   </div>
- </section>`;
-}
 
-async function weatherPage(){
- setMeta();
- app.innerHTML=`<section class="weather-page"><div class="container">
-   <div class="weather-hero"><span class="weather-kicker">☁ GAMARRA TV</span><h1>El clima</h1><p>Consulta las condiciones meteorológicas actuales y el pronóstico de los próximos días en cualquier lugar del mundo.</p></div>
-   <form id="weatherSearch" class="weather-search"><label>BUSCAR UBICACIÓN</label><div class="weather-search-row"><input id="weatherPlace" placeholder="Ejemplo: Bogotá, Madrid, Miami..." autocomplete="off"><button>⌕ Buscar</button></div></form>
-   <div id="weatherResult"><div class="weather-loading">Consultando el clima de Gamarra, Cesar...</div></div>
- </div></section>`;
- const form=document.getElementById('weatherSearch');
- form.onsubmit=async e=>{e.preventDefault();const place=document.getElementById('weatherPlace').value.trim();await fetchWeather(place||'Gamarra, Cesar, Colombia')};
- await fetchWeather('Gamarra, Cesar, Colombia');
-}
+/* =========================================================
+   ESTADO
+========================================================= */
 
-async function fetchWeather(place){
- const result=document.getElementById('weatherResult');if(!result)return;
- result.innerHTML='<div class="weather-loading">Cargando información meteorológica...</div>';
- try{
-  const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(place)}&count=1&language=es&format=json`).then(r=>r.json());
-  const loc=geo.results?.[0];
-  if(!loc)throw new Error('No encontramos esa ubicación. Intenta con otra ciudad.');
-  const url=`https://api.open-meteo.com/v1/forecast?latitude=${loc.latitude}&longitude=${loc.longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=7`;
-  const data=await fetch(url).then(r=>r.json());
-  const wcode=data.current.weather_code;
-  const currentWeather=weatherInfo(wcode);
-  const days=data.daily.time.map((d,i)=>({date:d,code:data.daily.weather_code[i],max:data.daily.temperature_2m_max[i],min:data.daily.temperature_2m_min[i],rain:data.daily.precipitation_probability_max[i]}));
-  result.innerHTML=`<div class="weather-current">
-    <div class="weather-location">⌖ ${esc(loc.name)}, ${esc(loc.admin1||'')}, ${esc(loc.country||'')}</div>
-    <div class="weather-current-main"><div class="weather-symbol">${currentWeather.icon}</div><div><div class="weather-temp">${Math.round(data.current.temperature_2m)}°<small>${esc(data.current_units?.temperature_2m||'C')}</small></div><strong>${currentWeather.label}</strong><span class="weather-updated">Condiciones actuales</span></div></div>
-    <div class="weather-stats"><div><b>💧</b><span>Humedad</span><strong>${Math.round(data.current.relative_humidity_2m)}%</strong></div><div><b>≋</b><span>Viento</span><strong>${Math.round(data.current.wind_speed_10m)} km/h</strong></div><div><b>☔</b><span>Prob. lluvia</span><strong>${Math.round(data.daily.precipitation_probability_max?.[0]||0)}%</strong></div></div>
-  </div>
-  <div class="forecast-head"><div><span class="kicker">PRONÓSTICO</span><h2>Próximos 7 días</h2></div><small>Actualización automática</small></div>
-  <div class="forecast-grid">${days.map((d,i)=>{const inf=weatherInfo(d.code);return `<div class="forecast-card ${i===0?'today':''}"><div class="forecast-day">${i===0?'HOY':formatForecastDay(d.date)}</div><div class="forecast-icon">${inf.icon}</div><strong>${Math.round(d.max)}°</strong><span>Min. ${Math.round(d.min)}°</span><div class="forecast-line"></div><small>☔ ${Math.round(d.rain||0)}%</small></div>`}).join('')}</div>
-  <div class="weather-source">Información meteorológica proporcionada por Open-Meteo. Las condiciones pueden cambiar.</div>`;
- }catch(err){result.innerHTML=`<div class="weather-error"><h3>No se pudo consultar el clima</h3><p>${esc(err.message||'Intenta nuevamente.')}</p><button id="weatherRetry" class="btn btn-primary">Volver a Gamarra</button></div>`;const retry=document.getElementById('weatherRetry');if(retry)retry.onclick=()=>fetchWeather('Gamarra, Cesar, Colombia')}
-}
-function weatherInfo(code){
- const m={0:['☀️','Despejado'],1:['🌤️','Mayormente despejado'],2:['⛅','Parcialmente nublado'],3:['☁️','Nublado'],45:['🌫️','Niebla'],48:['🌫️','Niebla'],51:['🌦️','Llovizna'],53:['🌦️','Llovizna'],55:['🌧️','Llovizna intensa'],61:['🌧️','Lluvia'],63:['🌧️','Lluvia moderada'],65:['🌧️','Lluvia intensa'],71:['🌨️','Nieve'],73:['🌨️','Nieve moderada'],75:['❄️','Nieve intensa'],80:['🌦️','Chubascos'],81:['🌧️','Chubascos'],82:['⛈️','Chubascos fuertes'],95:['⛈️','Tormenta'],96:['⛈️','Tormenta con granizo'],99:['⛈️','Tormenta con granizo']};const x=m[code]||['🌡️','Condición variable'];return{icon:x[0],label:x[1]}}
-function formatForecastDay(dateStr){return new Intl.DateTimeFormat('es-CO',{weekday:'short',day:'2-digit'}).format(new Date(dateStr+'T12:00:00')).toUpperCase().replace('.','')}
+let currentNews = [];
 
-async function render(){const hash=location.hash||'#/';try{if(hash.startsWith('#/noticia/')){return article(decodeURIComponent(hash.slice(10)))}if(hash==='#/login')return login();if(hash==='#/admin')return admin();if(hash==='#/contacto')return contact();if(hash==='#/clima')return weatherPage();const cat=hash.startsWith('#/categoria/')?decodeURIComponent(hash.slice(12)).toLowerCase():null;if(hash==='#/noticias'||cat){await loadNews();return newsPage(cat||'')}if(hash==='#/en-vivo'||hash==='#/programacion'){setMeta();await loadPrograms();app.innerHTML=live();bindLive();return}setMeta();await loadNews();await loadPrograms();await loadClients();await loadAds();S.day=null;app.innerHTML=home();bindHome();renderHomeClients();document.getElementById('homeAds')?.replaceWith(document.createRange().createContextualFragment(adsBlock(S.ads)))}catch(e){console.error(e);app.innerHTML=`<div class="error-box"><h2>No se pudo cargar el contenido</h2><p>${esc(e.message||e)}</p><a class="back-link" href="#/">← Volver al inicio</a></div>`}}
-sb.auth.onAuthStateChange(()=>setTimeout(session,0));window.addEventListener('hashchange',render);(async()=>{await session();await render()})();
+let currentPrograms = [];
 
-// === Publicidad y videos en noticias ===
-async function loadAds(){
-  const r=await sb.from('publicidad').select('id,titulo,imagen_url,enlace_url,descripcion,activo,orden,created_at').eq('activo',true).order('orden',{ascending:true}).order('created_at',{ascending:false});
-  if(r.error){console.warn('No se pudo cargar publicidad:',r.error.message);S.ads=[];return S.ads}
-  S.ads=r.data||[];return S.ads
-}
-function adsBlock(ads=S.ads||[]){
-  if(!ads.length)return '';
-  return `<section class="ads-section"><div class="container"><div class="section-head"><div><span class="kicker">GAMARRA TV</span><h2>Publicidad</h2><p class="section-subtitle">Conoce nuestros anunciantes y aliados.</p></div></div><div class="ads-grid">${ads.map(a=>`<a class="ad-card" href="${esc(a.enlace_url||'#')}" ${a.enlace_url?'target="_blank" rel="noopener"':''}><div class="ad-media">${a.imagen_url?`<img src="${esc(a.imagen_url)}" alt="${esc(a.titulo||'Publicidad')}" loading="lazy">`:'<div class="ad-placeholder">PUBLICIDAD</div>'}</div><div class="ad-info"><h3>${esc(a.titulo||'Publicidad')}</h3>${a.descripcion?`<p>${esc(a.descripcion)}</p>`:''}${a.enlace_url?'<span>Ver más →</span>':''}</div></a>`).join('')}</div></div></section>`;
-}
-function newsVideo(url){
-  if(!url)return '';
-  const u=String(url).trim();
-  if(/youtube\.com|youtu\.be/i.test(u)){
-    let id=''; try{const x=new URL(u); id=x.hostname.includes('youtu.be')?x.pathname.slice(1):x.searchParams.get('v')||x.pathname.split('/').pop()}catch(e){}
-    if(id)return `<div class="article-video"><iframe src="https://www.youtube.com/embed/${esc(id)}" title="Video de la noticia" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>`;
+let currentClients = [];
+
+let currentAds = [];
+
+let currentUser = null;
+
+let selectedNewsCategory = "Todas";
+
+let selectedScheduleDay = getTodayDay();
+
+
+/* =========================================================
+   INICIO
+========================================================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  async () => {
+
+    setupForms();
+
+    setupImagePreviews();
+
+    await checkSession();
+
+    await route();
+
   }
-  if(/vimeo\.com/i.test(u)){const id=u.match(/vimeo\.com\/(?:video\/)?(\d+)/)?.[1];if(id)return `<div class="article-video"><iframe src="https://player.vimeo.com/video/${id}" title="Video de la noticia" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`}
-  if(/\.(mp4|webm|ogg)(\?.*)?$/i.test(u))return `<div class="article-video"><video controls preload="metadata" playsinline src="${esc(u)}"></video></div>`;
-  return `<div class="article-video"><iframe src="${esc(u)}" title="Video de la noticia" loading="lazy" allowfullscreen></iframe></div>`;
+);
+
+
+/* =========================================================
+   UTILIDADES
+========================================================= */
+
+function escapeHTML(value) {
+
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
 }
 
-})();
+
+function slugify(text) {
+
+  return String(text || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+}
+
+
+function formatDate(date) {
+
+  if (!date) {
+    return "";
+  }
+
+  const d = new Date(date);
+
+  return d.toLocaleDateString(
+    "es-CO",
+    {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    }
+  );
+
+}
+
+
+function formatTime(time) {
+
+  if (!time) {
+    return "";
+  }
+
+  const parts = time.split(":");
+
+  if (parts.length < 2) {
+    return time;
+  }
+
+  let hour = parseInt(parts[0], 10);
+
+  const minute = parts[1];
+
+  const suffix = hour >= 12 ? "p. m." : "a. m.";
+
+  hour = hour % 12;
+
+  if (hour === 0) {
+    hour = 12;
+  }
+
+  return `${hour}:${minute} ${suffix}`;
+
+}
+
+
+function getTodayDay() {
+
+  const day = new Date().getDay();
+
+  return day === 0 ? 7 : day;
+
+}
+
+
+function youtubeEmbed(url) {
+
+  if (!url) {
+    return "";
+  }
+
+  try {
+
+    const parsed =
+      new URL(url);
+
+    let videoId = "";
+
+    if (
+      parsed.hostname.includes("youtube.com")
+    ) {
+
+      videoId =
+        parsed.searchParams.get("v") || "";
+
+    }
+
+    if (
+      parsed.hostname === "youtu.be"
+    ) {
+
+      videoId =
+        parsed.pathname.replace("/", "");
+
+    }
+
+    if (!videoId) {
+      return "";
+    }
+
+    return `
+      <div class="article-video">
+        <iframe
+          src="https://www.youtube.com/embed/${encodeURIComponent(videoId)}"
+          title="Video de Gamarra TV"
+          loading="lazy"
+          allowfullscreen>
+        </iframe>
+      </div>
+    `;
+
+  } catch {
+
+    return "";
+
+  }
+
+}
+
+
+/* =========================================================
+   SUPABASE DISPONIBILIDAD
+========================================================= */
+
+function databaseReady() {
+
+  if (!supabase) {
+
+    showAppError(
+      "Configuración pendiente",
+      "Debes colocar la URL de tu proyecto Supabase en app.js."
+    );
+
+    return false;
+
+  }
+
+  return true;
+
+}
+
+
+/* =========================================================
+   SESIÓN
+========================================================= */
+
+async function checkSession() {
+
+  if (!supabase) {
+    return;
+  }
+
+  const {
+    data
+  } =
+    await supabase.auth.getSession();
+
+  currentUser =
+    data?.session?.user || null;
+
+  updatePanelButton();
+
+  supabase.auth.onAuthStateChange(
+    (_event, session) => {
+
+      currentUser =
+        session?.user || null;
+
+      updatePanelButton();
+
+    }
+  );
+
+}
+
+
+function updatePanelButton() {
+
+  const button =
+    document.getElementById("panelButton");
+
+  if (!button) {
+    return;
+  }
+
+  if (currentUser) {
+
+    button.textContent =
+      "⚙️ Panel";
+
+  } else {
+
+    button.textContent =
+      "🔐 Panel";
+
+  }
+
+}
+
+
+/* =========================================================
+   LOGIN
+========================================================= */
+
+function openPanel() {
+
+  if (currentUser) {
+
+    document
+      .getElementById("panelModal")
+      .classList.remove("hidden");
+
+    document
+      .getElementById("sessionUser")
+      .textContent =
+      currentUser.email || "";
+
+    loadAdminData();
+
+    return;
+
+  }
+
+  document
+    .getElementById("loginModal")
+    .classList.remove("hidden");
+
+}
+
+
+function closeLogin() {
+
+  document
+    .getElementById("loginModal")
+    .classList.add("hidden");
+
+}
+
+
+async function login(event) {
+
+  event.preventDefault();
+
+  if (!databaseReady()) {
+    return;
+  }
+
+  const email =
+    document
+      .getElementById("loginEmail")
+      .value
+      .trim();
+
+  const password =
+    document
+      .getElementById("loginPassword")
+      .value;
+
+  const message =
+    document.getElementById(
+      "loginMessage"
+    );
+
+  message.innerHTML =
+    `<div class="message">Iniciando sesión...</div>`;
+
+  const {
+    data,
+    error
+  } =
+    await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+  if (error) {
+
+    message.innerHTML =
+      `<div class="message error">
+        ${escapeHTML(error.message)}
+      </div>`;
+
+    return;
+
+  }
+
+  currentUser =
+    data.user;
+
+  closeLogin();
+
+  openPanel();
+
+}
+
+
+async function logout() {
+
+  if (supabase) {
+    await supabase.auth.signOut();
+  }
+
+  currentUser = null;
+
+  document
+    .getElementById("panelModal")
+    .classList.add("hidden");
+
+  updatePanelButton();
+
+}
+
+
+/* =========================================================
+   FORMULARIOS
+========================================================= */
+
+function setupForms() {
+
+  document
+    .getElementById("loginForm")
+    ?.addEventListener(
+      "submit",
+      login
+    );
+
+  document
+    .getElementById("newsForm")
+    ?.addEventListener(
+      "submit",
+      saveNews
+    );
+
+  document
+    .getElementById("programForm")
+    ?.addEventListener(
+      "submit",
+      saveProgram
+    );
+
+  document
+    .getElementById("adForm")
+    ?.addEventListener(
+      "submit",
+      saveAd
+    );
+
+  document
+    .getElementById("clientForm")
+    ?.addEventListener(
+      "submit",
+      saveClient
+    );
+
+}
+
+
+function setupImagePreviews() {
+
+  document
+    .getElementById("newsImage")
+    ?.addEventListener(
+      "input",
+      () => {
+
+        const url =
+          document.getElementById(
+            "newsImage"
+          ).value;
+
+        const preview =
+          document.getElementById(
+            "imagePreview"
+          );
+
+        if (!url) {
+
+          preview.innerHTML = "";
+
+          return;
+
+        }
+
+        preview.innerHTML =
+          `<img src="${escapeHTML(url)}"
+                alt="Vista previa"
+                onerror="this.style.display='none'">`;
+
+      }
+    );
+
+
+  document
+    .getElementById("programLogo")
+    ?.addEventListener(
+      "input",
+      () => {
+
+        const url =
+          document.getElementById(
+            "programLogo"
+          ).value;
+
+        const preview =
+          document.getElementById(
+            "programLogoPreview"
+          );
+
+        if (!url) {
+
+          preview.innerHTML = "";
+
+          return;
+
+        }
+
+        preview.innerHTML =
+          `<img src="${escapeHTML(url)}"
+                alt="Logo"
+                onerror="this.style.display='none'">`;
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   ROUTER
+========================================================= */
+
+async function route() {
+
+  const path =
+    window.location.pathname;
+
+  if (
+    path === "/" ||
+    path === ""
+  ) {
+
+    await renderHome();
+
+    return;
+
+  }
+
+
+  if (
+    path === "/noticias" ||
+    path === "/noticias/"
+  ) {
+
+    await renderNewsPage();
+
+    return;
+
+  }
+
+
+  if (
+    path.startsWith("/noticia/")
+  ) {
+
+    const slug =
+      decodeURIComponent(
+        path.replace(
+          "/noticia/",
+          ""
+        )
+      );
+
+    await renderArticle(slug);
+
+    return;
+
+  }
+
+
+  if (
+    path === "/en-vivo" ||
+    path === "/en-vivo/"
+  ) {
+
+    await renderLivePage();
+
+    return;
+
+  }
+
+
+  if (
+    path === "/clima" ||
+    path === "/clima/"
+  ) {
+
+    renderWeatherPage();
+
+    return;
+
+  }
+
+
+  if (
+    path === "/contacto" ||
+    path === "/contacto/"
+  ) {
+
+    await renderContactPage();
+
+    return;
+
+  }
+
+
+  if (
+    path === "/programacion" ||
+    path === "/programacion/"
+  ) {
+
+    await renderLivePage();
+
+    return;
+
+  }
+
+
+  await renderHome();
+
+}
+
+
+function navigate(url) {
+
+  window.history.pushState(
+    {},
+    "",
+    url
+  );
+
+  route();
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+}
+
+
+window.addEventListener(
+  "popstate",
+  route
+);
+
+
+function navigateHome(event) {
+
+  event.preventDefault();
+
+  navigate("/");
+
+}
+
+
+function navigateNews(event) {
+
+  event.preventDefault();
+
+  navigate("/noticias");
+
+}
+
+
+function navigateLive(event) {
+
+  event.preventDefault();
+
+  navigate("/en-vivo");
+
+}
+
+
+function navigateWeather(event) {
+
+  event.preventDefault();
+
+  navigate("/clima");
+
+}
+
+
+function navigateContact(event) {
+
+  event.preventDefault();
+
+  navigate("/contacto");
+
+}
+
+
+/* =========================================================
+   INICIO
+========================================================= */
+
+async function renderHome() {
+
+  const app =
+    document.getElementById("app");
+
+  app.innerHTML =
+    `
+    <section class="section">
+
+      <div class="container">
+
+        <div id="homeContent">
+
+          <div class="message">
+            Cargando Gamarra TV...
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+    `;
+
+
+  const [
+    news,
+    programs,
+    clients,
+    ads
+  ] =
+    await Promise.all([
+      getNews(),
+      getPrograms(),
+      getClients(),
+      getAds()
+    ]);
+
+
+  const latest =
+    news.slice(0, 6);
+
+  const featured =
+    latest[0];
+
+
+  let html = "";
+
+
+  /* HERO */
+
+  if (featured) {
+
+    html += `
+      <section class="hero">
+
+        <div class="container hero-grid">
+
+          <article
+            class="hero-main"
+            onclick="openArticle('${escapeHTML(featured.slug)}')"
+            style="cursor:pointer"
+          >
+
+            <img
+              src="${escapeHTML(
+                featured.imagen_url || LOGO_URL
+              )}"
+              alt="${escapeHTML(featured.titulo)}"
+              loading="eager"
+            >
+
+            <div class="hero-overlay"></div>
+
+            <div class="hero-content">
+
+              <span class="category-badge">
+                ${escapeHTML(featured.categoria)}
+              </span>
+
+              <h1>
+                ${escapeHTML(featured.titulo)}
+              </h1>
+
+              <p>
+                ${escapeHTML(featured.resumen || "")}
+              </p>
+
+            </div>
+
+          </article>
+
+          <div class="side-news">
+
+            ${latest
+              .slice(1, 4)
+              .map(renderSideNews)
+              .join("")}
+
+          </div>
+
+        </div>
+
+      </section>
+    `;
+
+  }
+
+
+  /* TODAS LAS CATEGORÍAS */
+
+  html += `
+    <section class="section">
+
+      <div class="container">
+
+        <h2 class="section-title">
+          Noticias
+        </h2>
+
+        <p class="section-subtitle">
+          Toda la actualidad de Gamarra, el Cesar,
+          Colombia y el mundo.
+        </p>
+
+        <div class="category-scroller">
+
+          <button
+            class="category-pill active"
+            onclick="filterHomeCategory('Todas')"
+          >
+            Todas
+          </button>
+
+          ${CATEGORIES.map(
+            category =>
+              `
+              <button
+                class="category-pill"
+                onclick="filterHomeCategory('${escapeHTML(category)}')"
+              >
+                ${escapeHTML(category)}
+              </button>
+              `
+          ).join("")}
+
+        </div>
+
+        <div
+          id="homeNewsGrid"
+          class="news-grid"
+        >
+          ${latest.map(renderNewsCard).join("")}
+        </div>
+
+      </div>
+
+    </section>
+  `;
+
+
+  /* CARRUSEL */
+
+  html += `
+    <section class="section">
+
+      <div class="container">
+
+        <h2 class="section-title">
+          Últimas noticias
+        </h2>
+
+        <p class="section-subtitle">
+          Las noticias más recientes publicadas por Gamarra TV.
+        </p>
+
+        <div class="carousel-buttons">
+
+          <button onclick="moveCarousel(-1)">
+            ←
+          </button>
+
+          <button onclick="moveCarousel(1)">
+            →
+          </button>
+
+        </div>
+
+        <div
+          id="newsCarousel"
+          class="carousel"
+        >
+          ${news.map(renderNewsCard).join("")}
+        </div>
+
+      </div>
+
+    </section>
+  `;
+
+
+  /* SEÑAL */
+
+  html += `
+    <section class="section live-section">
+
+      <div class="container">
+
+        <h2 class="section-title" style="color:white">
+          🔴 Señal en vivo
+        </h2>
+
+        <p class="section-subtitle" style="color:#b8c7d6">
+          Gamarra TV en vivo las 24 horas.
+        </p>
+
+        <div class="live-layout">
+
+          <div class="live-player">
+
+            <iframe
+              src="${OPENCASTER_URL}"
+              title="Gamarra TV en vivo"
+              allow="autoplay; fullscreen"
+              allowfullscreen
+            ></iframe>
+
+          </div>
+
+          <div class="schedule-box">
+
+            <h3>
+              PROGRAMACIÓN
+            </h3>
+
+            <div class="schedule-days">
+
+              ${Object.entries(DAY_NAMES)
+                .map(
+                  ([number, name]) =>
+                    `
+                    <button
+                      class="schedule-day ${
+                        Number(number) === selectedScheduleDay
+                          ? "active"
+                          : ""
+                      }"
+                      onclick="selectScheduleDay(${number})"
+                    >
+                      ${name}
+                    </button>
+                    `
+                )
+                .join("")}
+
+            </div>
+
+            <div id="homeSchedule">
+              ${renderScheduleItems(
+                programs,
+                selectedScheduleDay
+              )}
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+  `;
+
+
+  /* PUBLICIDAD */
+
+  if (ads.length) {
+
+    html += `
+      <section class="section">
+
+        <div class="container">
+
+          <h2 class="section-title">
+            Publicidad
+          </h2>
+
+          <div class="clients-grid">
+
+            ${ads
+              .filter(ad => ad.activo !== false)
+              .map(renderAd)
+              .join("")}
+
+          </div>
+
+        </div>
+
+      </section>
+    `;
+
+  }
+
+
+  /* PRODUCTOS Y SERVICIOS */
+
+  html += `
+    <section class="section">
+
+      <div class="container">
+
+        <h2 class="section-title">
+          Productos y Servicios
+        </h2>
+
+        <p class="section-subtitle">
+          Soluciones de comunicación y tecnología.
+        </p>
+
+        <div class="products-grid">
+
+          <article class="product-card">
+
+            <div class="product-icon">
+              🧠
+            </div>
+
+            <h3>
+              Servicios Profesionales
+            </h3>
+
+            <p>
+              Consultoría experta en medios de comunicación,
+              telecomunicaciones y emprendimientos digitales.
+            </p>
+
+            <a
+              class="contract-button"
+              target="_blank"
+              href="https://wa.me/${WHATSAPP}?text=Hola,%20quiero%20más%20información%20sobre%20Servicios%20Profesionales"
+            >
+              💬 Contratar
+            </a>
+
+          </article>
+
+
+          <article class="product-card">
+
+            <div class="product-icon">
+              💻
+            </div>
+
+            <h3>
+              Diseño Web y Apps
+            </h3>
+
+            <p>
+              Desarrollamos sitios web, apps móviles y plataformas
+              adaptadas a tus necesidades.
+            </p>
+
+            <a
+              class="contract-button"
+              target="_blank"
+              href="https://wa.me/${WHATSAPP}?text=Hola,%20quiero%20cotizar%20Diseño%20Web%20y%20Apps"
+            >
+              💬 Contratar
+            </a>
+
+          </article>
+
+
+          <article class="product-card">
+
+            <div class="product-icon">
+              📡
+            </div>
+
+            <h3>
+              Streaming
+            </h3>
+
+            <p>
+              Soluciones para transmisiones en vivo,
+              radio online y canales digitales.
+            </p>
+
+            <a
+              class="contract-button"
+              target="_blank"
+              href="https://wa.me/${WHATSAPP}?text=Hola,%20me%20interesa%20el%20servicio%20de%20Streaming"
+            >
+              💬 Contratar
+            </a>
+
+          </article>
+
+        </div>
+
+      </div>
+
+    </section>
+  `;
+
+
+  /* CLIENTES */
+
+  html += `
+    <section class="section">
+
+      <div class="container">
+
+        <h2 class="section-title">
+          Nuestros clientes
+        </h2>
+
+        <p class="section-subtitle">
+          Empresas y proyectos que hacen parte de nuestra comunidad.
+        </p>
+
+        <div class="clients-grid">
+
+          ${clients
+            .map(renderClient)
+            .join("")}
+
+        </div>
+
+      </div>
+
+    </section>
+  `;
+
+
+  document
+    .getElementById("homeContent")
+    .innerHTML =
+    html;
+
+}
+
+
+function renderSideNews(news) {
+
+  return `
+    <article
+      class="side-news-card"
+      onclick="openArticle('${escapeHTML(news.slug)}')"
+      style="cursor:pointer"
+    >
+
+      <img
+        src="${escapeHTML(
+          news.imagen_url || LOGO_URL
+        )}"
+        alt="${escapeHTML(news.titulo)}"
+        loading="lazy"
+      >
+
+      <div>
+
+        <span class="category-badge">
+          ${escapeHTML(news.categoria)}
+        </span>
+
+        <h3>
+          ${escapeHTML(news.titulo)}
+        </h3>
+
+      </div>
+
+    </article>
+  `;
+
+}
+
+
+function renderNewsCard(news) {
+
+  return `
+    <article class="news-card">
+
+      <div
+        class="news-card-image"
+        onclick="openArticle('${escapeHTML(news.slug)}')"
+        style="cursor:pointer"
+      >
+
+        <img
+          src="${escapeHTML(
+            news.imagen_url || LOGO_URL
+          )}"
+          alt="${escapeHTML(news.titulo)}"
+          loading="lazy"
+        >
+
+      </div>
+
+      <div class="news-card-body">
+
+        <span class="category-badge">
+          ${escapeHTML(news.categoria)}
+        </span>
+
+        <h3>
+          ${escapeHTML(news.titulo)}
+        </h3>
+
+        <p>
+          ${escapeHTML(
+            truncate(news.resumen || "", 140)
+          )}
+        </p>
+
+        <div class="news-meta">
+
+          <span>
+            📅 ${formatDate(news.created_at)}
+          </span>
+
+          <span>
+            GTV
+          </span>
+
+        </div>
+
+        <a
+          class="read-more"
+          href="/noticia/${encodeURIComponent(news.slug)}"
+          onclick="event.preventDefault(); openArticle('${escapeHTML(news.slug)}')"
+        >
+          Leer noticia →
+        </a>
+
+      </div>
+
+    </article>
+  `;
+
+}
+
+
+function truncate(text, length) {
+
+  if (text.length <= length) {
+    return text;
+  }
+
+  return text.substring(0, length) + "...";
+
+}
+
+
+/* =========================================================
+   NOTICIAS
+========================================================= */
+
+async function getNews() {
+
+  if (!supabase) {
+    return [];
+  }
+
+  const {
+    data,
+    error
+  } =
+    await supabase
+      .from("noticias")
+      .select("*")
+      .order("created_at", {
+        ascending: false
+      });
+
+  if (error) {
+
+    console.error(
+      "Error cargando noticias:",
+      error
+    );
+
+    return [];
+
+  }
+
+  currentNews =
+    data || [];
+
+  return currentNews;
+
+}
+
+
+async function renderNewsPage() {
+
+  const news =
+    await getNews();
+
+  const app =
+    document.getElementById("app");
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+  const category =
+    params.get("categoria") ||
+    "Todas";
+
+  selectedNewsCategory =
+    category;
+
+  app.innerHTML = `
+
+    <section class="section">
+
+      <div class="container">
+
+        <h1 class="section-title">
+          Últimas noticias
+        </h1>
+
+        <p class="section-subtitle">
+          Noticias, televisión y actualidad de Gamarra TV.
+        </p>
+
+
+        <div class="category-scroller">
+
+          <button
+            class="category-pill ${
+              category === "Todas"
+                ? "active"
+                : ""
+            }"
+            onclick="filterNewsPage('Todas')"
+          >
+            Todas
+          </button>
+
+          ${CATEGORIES.map(
+            item =>
+              `
+              <button
+                class="category-pill ${
+                  category === item
+                    ? "active"
+                    : ""
+                }"
+                onclick="filterNewsPage('${escapeHTML(item)}')"
+              >
+                ${escapeHTML(item)}
+              </button>
+              `
+          ).join("")}
+
+        </div>
+
+
+        <div
+          id="allNewsGrid"
+          class="news-grid"
+        >
+          ${renderFilteredNews(
+            news,
+            category
+          )}
+        </div>
+
+      </div>
+
+    </section>
+
+  `;
+
+}
+
+
+function renderFilteredNews(
+  news,
+  category
+) {
+
+  let filtered =
+    news;
+
+  if (
+    category &&
+    category !== "Todas"
+  ) {
+
+    filtered =
+      news.filter(
+        item =>
+          item.categoria === category
+      );
+
+  }
+
+  if (!filtered.length) {
+
+    return `
+      <div class="message">
+        No hay noticias publicadas en esta categoría.
+      </div>
+    `;
+
+  }
+
+  return filtered
+    .map(renderNewsCard)
+    .join("");
+
+}
+
+
+function filterNewsPage(category) {
+
+  const url =
+    category === "Todas"
+      ? "/noticias"
+      : `/noticias?categoria=${encodeURIComponent(category)}`;
+
+  window.history.pushState(
+    {},
+    "",
+    url
+  );
+
+  renderNewsPage();
+
+}
+
+
+function filterHomeCategory(category) {
+
+  const grid =
+    document.getElementById(
+      "homeNewsGrid"
+    );
+
+  if (!grid) {
+    return;
+  }
+
+  let list =
+    currentNews;
+
+  if (
+    category &&
+    category !== "Todas"
+  ) {
+
+    list =
+      currentNews.filter(
+        item =>
+          item.categoria === category
+      );
+
+  }
+
+  grid.innerHTML =
+    list
+      .slice(0, 9)
+      .map(renderNewsCard)
+      .join("");
+
+}
+
+
+/* =========================================================
+   ARTÍCULO INDIVIDUAL
+========================================================= */
+
+async function openArticle(slug) {
+
+  const url =
+    `/noticia/${encodeURIComponent(slug)}`;
+
+  window.history.pushState(
+    {},
+    "",
+    url
+  );
+
+  await renderArticle(slug);
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+}
+
+
+async function renderArticle(slug) {
+
+  if (!supabase) {
+
+    showAppError(
+      "Configuración pendiente",
+      "Debes conectar Supabase."
+    );
+
+    return;
+
+  }
+
+  const {
+    data,
+    error
+  } =
+    await supabase
+      .from("noticias")
+      .select("*")
+      .eq("slug", slug)
+      .maybeSingle();
+
+  const app =
+    document.getElementById("app");
+
+
+  if (
+    error ||
+    !data
+  ) {
+
+    app.innerHTML = `
+      <section class="section">
+
+        <div class="container">
+
+          <div class="message error">
+            La noticia no existe o fue eliminada.
+          </div>
+
+          <a
+            href="/noticias"
+            onclick="navigateNews(event)"
+          >
+            ← Volver a noticias
+          </a>
+
+        </div>
+
+      </section>
+    `;
+
+    return;
+
+  }
+
+
+  const canonical =
+    `${SITE_URL}/noticia/${encodeURIComponent(data.slug)}`;
+
+
+  /* =====================================================
+     SEO / OPEN GRAPH
+  ====================================================== */
+
+  updateMeta(
+    "og:title",
+    data.titulo
+  );
+
+  updateMeta(
+    "og:description",
+    data.resumen || ""
+  );
+
+  updateMeta(
+    "og:image",
+    data.imagen_url || LOGO_URL
+  );
+
+  updateMeta(
+    "og:url",
+    canonical
+  );
+
+  updateMeta(
+    "og:type",
+    "article"
+  );
+
+  updateMeta(
+    "twitter:title",
+    data.titulo
+  );
+
+  updateMeta(
+    "twitter:description",
+    data.resumen || ""
+  );
+
+  updateMeta(
+    "twitter:image",
+    data.imagen_url || LOGO_URL
+  );
+
+  document.title =
+    `${data.titulo} | Gamarra TV`;
+
+
+  app.innerHTML = `
+
+    <article class="article-page">
+
+      <div class="article-container">
+
+        <div class="article-category">
+          ${escapeHTML(data.categoria)}
+        </div>
+
+        <h1 class="article-title">
+          ${escapeHTML(data.titulo)}
+        </h1>
+
+        <p class="article-summary">
+          ${escapeHTML(data.resumen || "")}
+        </p>
+
+        <div class="news-meta">
+          <span>
+            📅 ${formatDate(data.created_at)}
+          </span>
+
+          <span>
+            Gamarra TV
+          </span>
+        </div>
+
+
+        <img
+          class="article-image"
+          src="${escapeHTML(
+            data.imagen_url || LOGO_URL
+          )}"
+          alt="${escapeHTML(data.titulo)}"
+        >
+
+
+        <div class="share-buttons">
+
+          <a
+            target="_blank"
+            href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(canonical)}"
+          >
+            Facebook
+          </a>
+
+          <a
+            target="_blank"
+            href="https://api.whatsapp.com/send?text=${encodeURIComponent(
+              data.titulo + " " + canonical
+            )}"
+          >
+            WhatsApp
+          </a>
+
+          <button
+            onclick="copyArticleLink('${escapeHTML(canonical)}')"
+          >
+            Copiar enlace
+          </button>
+
+        </div>
+
+
+        <div class="article-content">
+          ${escapeHTML(
+            data.contenido || ""
+          )}
+        </div>
+
+
+        ${youtubeEmbed(
+          data.video_url
+        )}
+
+
+        <div style="margin-top:40px">
+
+          <a
+            href="/noticias"
+            onclick="navigateNews(event)"
+            class="read-more"
+          >
+            ← Volver a noticias
+          </a>
+
+        </div>
+
+      </div>
+
+    </article>
+
+  `;
+
+}
+
+
+function updateMeta(
+  property,
+  content
+) {
+
+  let meta =
+    document.querySelector(
+      `meta[property="${property}"]`
+    );
+
+  if (!meta) {
+
+    meta =
+      document.createElement("meta");
+
+    meta.setAttribute(
+      "property",
+      property
+    );
+
+    document.head.appendChild(
+      meta
+    );
+
+  }
+
+  meta.setAttribute(
+    "content",
+    content
+  );
+
+}
+
+
+async function copyArticleLink(url) {
+
+  try {
+
+    await navigator.clipboard.writeText(url);
+
+    alert(
+      "Enlace copiado correctamente."
+    );
+
+  } catch {
+
+    alert(url);
+
+  }
+
+}
+
+
+/* =========================================================
+   PROGRAMACIÓN
+========================================================= */
+
+async function getPrograms() {
+
+  if (!supabase) {
+    return [];
+  }
+
+  const {
+    data,
+    error
+  } =
+    await supabase
+      .from("programacion")
+      .select("*")
+      .order("dia_semana", {
+        ascending: true
+      })
+      .order("hora_inicio", {
+        ascending: true
+      });
+
+  if (error) {
+
+    console.error(
+      "Error cargando programación:",
+      error
+    );
+
+    return [];
+
+  }
+
+  currentPrograms =
+    data || [];
+
+  return currentPrograms;
+
+}
+
+
+function renderScheduleItems(
+  programs,
+  day
+) {
+
+  const filtered =
+    programs
+      .filter(
+        program =>
+          Number(
+            program.dia_semana
+          ) === Number(day)
+      )
+      .sort(
+        (a, b) =>
+          String(a.hora_inicio)
+            .localeCompare(
+              String(b.hora_inicio)
+            )
+      );
+
+
+  if (!filtered.length) {
+
+    return `
+      <div class="message">
+        No hay programación registrada para este día.
+      </div>
+    `;
+
+  }
+
+
+  return filtered
+    .map(
+      program =>
+        `
+        <div class="program-item">
+
+          <div class="program-time">
+            ${formatTime(
+              program.hora_inicio
+            )}
+          </div>
+
+          <div>
+
+            <div class="program-name">
+              ${escapeHTML(
+                program.programa
+              )}
+            </div>
+
+            ${
+              program.descripcion
+                ? `
+                  <small>
+                    ${escapeHTML(
+                      program.descripcion
+                    )}
+                  </small>
+                `
+                : ""
+            }
+
+          </div>
+
+          ${
+            program.logo_url
+              ? `
+                <img
+                  class="program-logo"
+                  src="${escapeHTML(
+                    program.logo_url
+                  )}"
+                  alt="${escapeHTML(
+                    program.programa
+                  )}"
+                >
+              `
+              : `
+                <div class="program-logo">
+                  GTV
+                </div>
+              `
+          }
+
+          <div class="program-end">
+            ${
+              program.hora_fin
+                ? `Hasta ${formatTime(
+                    program.hora_fin
+                  )}`
+                : ""
+            }
+          </div>
+
+        </div>
+        `
+    )
+    .join("");
+
+}
+
+
+function selectScheduleDay(day) {
+
+  selectedScheduleDay =
+    Number(day);
+
+  const container =
+    document.getElementById(
+      "homeSchedule"
+    );
+
+  if (container) {
+
+    container.innerHTML =
+      renderScheduleItems(
+        currentPrograms,
+        selectedScheduleDay
+      );
+
+  }
+
+  document
+    .querySelectorAll(
+      ".schedule-day"
+    )
+    .forEach(button => {
+
+      button.classList.toggle(
+        "active",
+        button.textContent.trim() ===
+          DAY_NAMES[
+            selectedScheduleDay
+          ]
+      );
+
+    });
+
+}
+
+
+async function renderLivePage() {
+
+  const programs =
+    await getPrograms();
+
+  const app =
+    document.getElementById("app");
+
+  app.innerHTML = `
+
+    <section class="section live-section">
+
+      <div class="container">
+
+        <h1
+          class="section-title"
+          style="color:white"
+        >
+          🔴 Gamarra TV en vivo
+        </h1>
+
+        <p
+          class="section-subtitle"
+          style="color:#b8c7d6"
+        >
+          Señal en vivo 24/7.
+        </p>
+
+        <div class="live-layout">
+
+          <div class="live-player">
+
+            <iframe
+              src="${OPENCASTER_URL}"
+              title="Gamarra TV en vivo"
+              allow="autoplay; fullscreen"
+              allowfullscreen
+            ></iframe>
+
+          </div>
+
+          <div class="schedule-box">
+
+            <h2>
+              PROGRAMACIÓN
+            </h2>
+
+            <div class="schedule-days">
+
+              ${Object.entries(DAY_NAMES)
+                .map(
+                  ([number, name]) =>
+                    `
+                    <button
+                      class="schedule-day ${
+                        Number(number) ===
+                        selectedScheduleDay
+                          ? "active"
+                          : ""
+                      }"
+                      onclick="selectScheduleDay(${number})"
+                    >
+                      ${name}
+                    </button>
+                    `
+                )
+                .join("")}
+
+            </div>
+
+            <div id="liveSchedule">
+
+              ${renderScheduleItems(
+                programs,
+                selectedScheduleDay
+              )}
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  `;
+
+}
+
+
+/* =========================================================
+   PANEL PROGRAMACIÓN
+========================================================= */
+
+async function saveProgram(event) {
+
+  event.preventDefault();
+
+  if (!currentUser) {
+
+    alert(
+      "Debes iniciar sesión."
+    );
+
+    return;
+
+  }
+
+  if (!databaseReady()) {
+    return;
+  }
+
+
+  const id =
+    document.getElementById(
+      "programId"
+    ).value;
+
+
+  const payload = {
+
+    dia_semana:
+      Number(
+        document.getElementById(
+          "programDay"
+        ).value
+      ),
+
+    hora_inicio:
+      document.getElementById(
+        "programStart"
+      ).value,
+
+    hora_fin:
+      document.getElementById(
+        "programEnd"
+      ).value,
+
+    programa:
+      document.getElementById(
+        "programName"
+      ).value
+      .trim(),
+
+    logo_url:
+      document.getElementById(
+        "programLogo"
+      ).value
+      .trim(),
+
+    descripcion:
+      document.getElementById(
+        "programDescription"
+      ).value
+      .trim()
+
+  };
+
+
+  let result;
+
+
+  if (id) {
+
+    result =
+      await supabase
+        .from("programacion")
+        .update(payload)
+        .eq("id", id);
+
+  } else {
+
+    result =
+      await supabase
+        .from("programacion")
+        .insert(payload);
+
+  }
+
+
+  if (result.error) {
+
+    showAdminError(
+      result.error.message
+    );
+
+    return;
+
+  }
+
+
+  showAdminSuccess(
+    "Programa guardado correctamente."
+  );
+
+  clearProgramForm();
+
+  await loadAdminPrograms();
+
+}
+
+
+function editProgram(program) {
+
+  document.getElementById(
+    "programId"
+  ).value =
+    program.id || "";
+
+  document.getElementById(
+    "programDay"
+  ).value =
+    program.dia_semana || 1;
+
+  document.getElementById(
+    "programStart"
+  ).value =
+    program.hora_inicio || "";
+
+  document.getElementById(
+    "programEnd"
+  ).value =
+    program.hora_fin || "";
+
+  document.getElementById(
+    "programName"
+  ).value =
+    program.programa || "";
+
+  document.getElementById(
+    "programLogo"
+  ).value =
+    program.logo_url || "";
+
+  document.getElementById(
+    "programDescription"
+  ).value =
+    program.descripcion || "";
+
+  showAdminTab(
+    "programacion"
+  );
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+}
+
+
+async function deleteProgram(id) {
+
+  if (
+    !confirm(
+      "¿Seguro que deseas eliminar este programa?"
+    )
+  ) {
+    return;
+  }
+
+  const {
+    error
+  } =
+    await supabase
+      .from("programacion")
+      .delete()
+      .eq("id", id);
+
+  if (error) {
+
+    showAdminError(
+      error.message
+    );
+
+    return;
+
+  }
+
+  showAdminSuccess(
+    "Programa eliminado correctamente."
+  );
+
+  await loadAdminPrograms();
+
+}
+
+
+function clearProgramForm() {
+
+  document
+    .getElementById(
+      "programForm"
+    )
+    .reset();
+
+  document.getElementById(
+    "programId"
+  ).value = "";
+
+  document.getElementById(
+    "programLogoPreview"
+  ).innerHTML = "";
+
+}
+
+
+async function loadAdminPrograms() {
+
+  const container =
+    document.getElementById(
+      "adminProgramList"
+    );
+
+  if (!container) {
+    return;
+  }
+
+  const programs =
+    await getPrograms();
+
+  if (!programs.length) {
+
+    container.innerHTML =
+      `<div class="message">
+        No hay programas registrados.
+      </div>`;
+
+    return;
+
+  }
+
+  container.innerHTML =
+    programs
+      .map(
+        program =>
+          `
+          <div class="admin-item">
+
+            <div class="admin-item-top">
+
+              ${
+                program.logo_url
+                  ? `
+                    <img
+                      class="admin-item-image"
+                      src="${escapeHTML(
+                        program.logo_url
+                      )}"
+                      alt=""
+                    >
+                  `
+                  : ""
+              }
+
+              <div style="flex:1">
+
+                <strong>
+                  ${escapeHTML(
+                    program.programa
+                  )}
+                </strong>
+
+                <div>
+                  ${
+                    DAY_NAMES[
+                      Number(
+                        program.dia_semana
+                      )
+                    ] || ""
+                  }
+                  ·
+                  ${formatTime(
+                    program.hora_inicio
+                  )}
+                  -
+                  ${formatTime(
+                    program.hora_fin
+                  )}
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="admin-actions">
+
+              <button
+                class="edit-btn"
+                onclick='editProgram(${JSON.stringify(program).replaceAll("'", "&#039;")})'
+              >
+                Editar
+              </button>
+
+              <button
+                class="delete-btn"
+                onclick="deleteProgram('${program.id}')"
+              >
+                Eliminar
+              </button>
+
+            </div>
+
+          </div>
+          `
+      )
+      .join("");
+
+}
+
+
+/* =========================================================
+   PANEL NOTICIAS
+========================================================= */
+
+async function saveNews(event) {
+
+  event.preventDefault();
+
+  if (!currentUser) {
+
+    alert(
+      "Debes iniciar sesión."
+    );
+
+    return;
+
+  }
+
+  if (!databaseReady()) {
+    return;
+  }
+
+
+  const id =
+    document.getElementById(
+      "newsId"
+    ).value;
+
+
+  const title =
+    document.getElementById(
+      "newsTitle"
+    ).value
+    .trim();
+
+
+  /*
+    ESTA ES LA CORRECCIÓN DEL ERROR
+    "slug = null"
+
+    El slug se genera siempre
+    antes de guardar.
+  */
+
+  let slug =
+    slugify(title);
+
+
+  if (!slug) {
+
+    showAdminError(
+      "No se pudo generar el enlace de la noticia. Revisa el título."
+    );
+
+    return;
+
+  }
+
+
+  /*
+    Si ya existe otra noticia
+    con el mismo slug, añadimos
+    una parte única.
+  */
+
+  if (!id) {
+
+    slug +=
+      "-" +
+      Date.now()
+        .toString()
+        .slice(-6);
+
+  }
+
+
+  const payload = {
+
+    titulo:
+      title,
+
+    slug:
+      slug,
+
+    categoria:
+      document.getElementById(
+        "newsCategory"
+      ).value,
+
+    resumen:
+      document.getElementById(
+        "newsSummary"
+      ).value
+      .trim(),
+
+    contenido:
+      document.getElementById(
+        "newsContent"
+      ).value
+      .trim(),
+
+    imagen_url:
+      document.getElementById(
+        "newsImage"
+      ).value
+      .trim(),
+
+    video_url:
+      document.getElementById(
+        "newsVideo"
+      ).value
+      .trim()
+
+  };
+
+
+  let result;
+
+
+  if (id) {
+
+    /*
+      Al editar conservamos
+      el slug existente si no
+      se desea cambiar la URL.
+    */
+
+    const existing =
+      currentNews.find(
+        item =>
+          String(item.id) ===
+          String(id)
+      );
+
+    if (
+      existing &&
+      existing.slug
+    ) {
+
+      payload.slug =
+        existing.slug;
+
+    }
+
+
+    result =
+      await supabase
+        .from("noticias")
+        .update(payload)
+        .eq("id", id);
+
+  } else {
+
+    result =
+      await supabase
+        .from("noticias")
+        .insert(payload);
+
+  }
+
+
+  if (result.error) {
+
+    console.error(
+      result.error
+    );
+
+    showAdminError(
+      result.error.message
+    );
+
+    return;
+
+  }
+
+
+  showAdminSuccess(
+    id
+      ? "Noticia actualizada correctamente."
+      : "Noticia publicada correctamente."
+  );
+
+
+  clearNewsForm();
+
+  await loadAdminNews();
+
+}
+
+
+function editNews(news) {
+
+  document.getElementById(
+    "newsId"
+  ).value =
+    news.id || "";
+
+  document.getElementById(
+    "newsTitle"
+  ).value =
+    news.titulo || "";
+
+  document.getElementById(
+    "newsCategory"
+  ).value =
+    news.categoria || "Gamarra";
+
+  document.getElementById(
+    "newsSummary"
+  ).value =
+    news.resumen || "";
+
+  document.getElementById(
+    "newsContent"
+  ).value =
+    news.contenido || "";
+
+  document.getElementById(
+    "newsImage"
+  ).value =
+    news.imagen_url || "";
+
+  document.getElementById(
+    "newsVideo"
+  ).value =
+    news.video_url || "";
+
+  if (news.imagen_url) {
+
+    document.getElementById(
+      "imagePreview"
+    ).innerHTML =
+      `<img src="${escapeHTML(
+        news.imagen_url
+      )}" alt="">`;
+
+  }
+
+  showAdminTab(
+    "noticias"
+  );
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+
+}
+
+
+async function deleteNews(id) {
+
+  if (
+    !confirm(
+      "¿Seguro que deseas eliminar esta noticia?"
+    )
+  ) {
+    return;
+  }
+
+
+  const {
+    error
+  } =
+    await supabase
+      .from("noticias")
+      .delete()
+      .eq("id", id);
+
+
+  if (error) {
+
+    showAdminError(
+      error.message
+    );
+
+    return;
+
+  }
+
+
+  showAdminSuccess(
+    "Noticia eliminada correctamente."
+  );
+
+  await loadAdminNews();
+
+}
+
+
+function clearNewsForm() {
+
+  document
+    .getElementById(
+      "newsForm"
+    )
+    .reset();
+
+  document.getElementById(
+    "newsId"
+  ).value = "";
+
+  document.getElementById(
+    "imagePreview"
+  ).innerHTML = "";
+
+}
+
+
+async function loadAdminNews() {
+
+  const container =
+    document.getElementById(
+      "adminNewsList"
+    );
+
+  if (!container) {
+    return;
+  }
+
+  const news =
+    await getNews();
+
+
+  if (!news.length) {
+
+    container.innerHTML =
+      `<div class="message">
+        No hay noticias publicadas.
+      </div>`;
+
+    return;
+
+  }
+
+
+  container.innerHTML =
+    news
+      .map(
+        newsItem =>
+          `
+          <div class="admin-item">
+
+            <div class="admin-item-top">
+
+              ${
+                newsItem.imagen_url
+                  ? `
+                    <img
+                      class="admin-item-image"
+                      src="${escapeHTML(
+                        newsItem.imagen_url
+                      )}"
+                      alt=""
+                    >
+                  `
+                  : ""
+              }
+
+              <div style="flex:1">
+
+                <strong>
+                  ${escapeHTML(
+                    newsItem.titulo
+                  )}
+                </strong>
+
+                <div>
+                  ${escapeHTML(
+                    newsItem.categoria
+                  )}
+                </div>
+
+                <small>
+                  /noticia/${escapeHTML(
+                    newsItem.slug
+                  )}
+                </small>
+
+              </div>
+
+            </div>
+
+
+            <div class="admin-actions">
+
+              <button
+                class="edit-btn"
+                onclick='editNews(${JSON.stringify(newsItem).replaceAll("'", "&#039;")})'
+              >
+                Editar
+              </button>
+
+              <button
+                class="delete-btn"
+                onclick="deleteNews('${newsItem.id}')"
+              >
+                Eliminar
+              </button>
+
+            </div>
+
+          </div>
+          `
+      )
+      .join("");
+
+}
+
+
+/* =========================================================
+   PUBLICIDAD
+========================================================= */
+
+async function getAds() {
+
+  if (!supabase) {
+    return [];
+  }
+
+  const {
+    data,
+    error
+  } =
+    await supabase
+      .from("publicidad")
+      .select("*")
+      .order("created_at", {
+        ascending: false
+      });
+
+  if (error) {
+
+    console.warn(
+      "Tabla publicidad no disponible:",
+      error.message
+    );
+
+    return [];
+
+  }
+
+  currentAds =
+    data || [];
+
+  return currentAds;
+
+}
+
+
+function renderAd(ad) {
+
+  return `
+    <a
+      class="client-card"
+      href="${escapeHTML(
+        ad.enlace || "#"
+      )}"
+      target="_blank"
+    >
+
+      <img
+        src="${escapeHTML(
+          ad.imagen_url
+        )}"
+        alt="${escapeHTML(
+          ad.titulo
+        )}"
+      >
+
+      <h3>
+        ${escapeHTML(ad.titulo)}
+      </h3>
+
+    </a>
+  `;
+
+}
+
+
+async function saveAd(event) {
+
+  event.preventDefault();
+
+  const id =
+    document.getElementById(
+      "adId"
+    ).value;
+
+
+  const payload = {
+
+    titulo:
+      document.getElementById(
+        "adTitle"
+      ).value
+      .trim(),
+
+    imagen_url:
+      document.getElementById(
+        "adImage"
+      ).value
+      .trim(),
+
+    enlace:
+      document.getElementById(
+        "adLink"
+      ).value
+      .trim(),
+
+    activo:
+      document.getElementById(
+        "adActive"
+      ).value === "true"
+
+  };
+
+
+  let result;
+
+
+  if (id) {
+
+    result =
+      await supabase
+        .from("publicidad")
+        .update(payload)
+        .eq("id", id);
+
+  } else {
+
+    result =
+      await supabase
+        .from("publicidad")
+        .insert(payload);
+
+  }
+
+
+  if (result.error) {
+
+    showAdminError(
+      result.error.message
+    );
+
+    return;
+
+  }
+
+
+  showAdminSuccess(
+    "Publicidad guardada correctamente."
+  );
+
+  document
+    .getElementById(
+      "adForm"
+    )
+    .reset();
+
+  await loadAdminAds();
+
+}
+
+
+async function deleteAd(id) {
+
+  if (
+    !confirm(
+      "¿Eliminar publicidad?"
+    )
+  ) {
+    return;
+  }
+
+  const {
+    error
+  } =
+    await supabase
+      .from("publicidad")
+      .delete()
+      .eq("id", id);
+
+  if (error) {
+
+    showAdminError(
+      error.message
+    );
+
+    return;
+
+  }
+
+  await loadAdminAds();
+
+}
+
+
+async function loadAdminAds() {
+
+  const container =
+    document.getElementById(
+      "adminAdsList"
+    );
+
+  if (!container) {
+    return;
+  }
+
+  const ads =
+    await getAds();
+
+
+  container.innerHTML =
+    ads
+      .map(
+        ad =>
+          `
+          <div class="admin-item">
+
+            <strong>
+              ${escapeHTML(
+                ad.titulo
+              )}
+            </strong>
+
+            <div class="admin-actions">
+
+              <button
+                class="delete-btn"
+                onclick="deleteAd('${ad.id}')"
+              >
+                Eliminar
+              </button>
+
+            </div>
+
+          </div>
+          `
+      )
+      .join("");
+
+}
+
+
+/* =========================================================
+   CLIENTES
+========================================================= */
+
+async function getClients() {
+
+  if (!supabase) {
+    return [];
+  }
+
+  const {
+    data,
+    error
+  } =
+    await supabase
+      .from("clientes")
+      .select("*")
+      .order("created_at", {
+        ascending: false
+      });
+
+  if (error) {
+
+    console.warn(
+      "Tabla clientes:",
+      error.message
+    );
+
+    return [];
+
+  }
+
+  currentClients =
+    data || [];
+
+  return currentClients;
+
+}
+
+
+function renderClient(client) {
+
+  return `
+    <a
+      class="client-card"
+      href="${escapeHTML(
+        client.url
+      )}"
+      target="_blank"
+      rel="noopener"
+    >
+
+      <img
+        src="${escapeHTML(
+          client.logo_url
+        )}"
+        alt="${escapeHTML(
+          client.nombre
+        )}"
+        loading="lazy"
+      >
+
+      <h3>
+        ${escapeHTML(
+          client.nombre
+        )}
+      </h3>
+
+    </a>
+  `;
+
+}
+
+
+async function saveClient(event) {
+
+  event.preventDefault();
+
+
+  const id =
+    document.getElementById(
+      "clientId"
+    ).value;
+
+
+  const payload = {
+
+    nombre:
+      document.getElementById(
+        "clientName"
+      ).value
+      .trim(),
+
+    logo_url:
+      document.getElementById(
+        "clientLogo"
+      ).value
+      .trim(),
+
+    url:
+      document.getElementById(
+        "clientUrl"
+      ).value
+      .trim()
+
+  };
+
+
+  let result;
+
+
+  if (id) {
+
+    result =
+      await supabase
+        .from("clientes")
+        .update(payload)
+        .eq("id", id);
+
+  } else {
+
+    result =
+      await supabase
+        .from("clientes")
+        .insert(payload);
+
+  }
+
+
+  if (result.error) {
+
+    showAdminError(
+      result.error.message
+    );
+
+    return;
+
+  }
+
+
+  showAdminSuccess(
+    "Cliente guardado correctamente."
+  );
+
+
+  document
+    .getElementById(
+      "clientForm"
+    )
+    .reset();
+
+  await loadAdminClients();
+
+}
+
+
+async function deleteClient(id) {
+
+  if (
+    !confirm(
+      "¿Eliminar este cliente?"
+    )
+  ) {
+    return;
+  }
+
+
+  const {
+    error
+  } =
+    await supabase
+      .from("clientes")
+      .delete()
+      .eq("id", id);
+
+
+  if (error) {
+
+    showAdminError(
+      error.message
+    );
+
+    return;
+
+  }
+
+
+  await loadAdminClients();
+
+}
+
+
+async function loadAdminClients() {
+
+  const container =
+    document.getElementById(
+      "adminClientsList"
+    );
+
+  if (!container) {
+    return;
+  }
+
+  const clients =
+    await getClients();
+
+
+  container.innerHTML =
+    clients
+      .map(
+        client =>
+          `
+          <div class="admin-item">
+
+            <div class="admin-item-top">
+
+              <img
+                class="admin-item-image"
+                src="${escapeHTML(
+                  client.logo_url
+                )}"
+                alt=""
+              >
+
+              <div>
+
+                <strong>
+                  ${escapeHTML(
+                    client.nombre
+                  )}
+                </strong>
+
+              </div>
+
+            </div>
+
+            <div class="admin-actions">
+
+              <button
+                class="delete-btn"
+                onclick="deleteClient('${client.id}')"
+              >
+                Eliminar
+              </button>
+
+            </div>
+
+          </div>
+          `
+      )
+      .join("");
+
+}
+
+
+/* =========================================================
+   PANEL
+========================================================= */
+
+async function loadAdminData() {
+
+  await Promise.all([
+    loadAdminNews(),
+    loadAdminPrograms(),
+    loadAdminAds(),
+    loadAdminClients()
+  ]);
+
+}
+
+
+function showAdminTab(tab) {
+
+  document
+    .querySelectorAll(
+      ".admin-section"
+    )
+    .forEach(section => {
+
+      section.classList.add(
+        "hidden"
+      );
+
+    });
+
+
+  document
+    .querySelectorAll(
+      ".admin-tab"
+    )
+    .forEach(button => {
+
+      button.classList.remove(
+        "active"
+      );
+
+    });
+
+
+  const sectionMap = {
+
+    noticias:
+      "adminNoticias",
+
+    programacion:
+      "adminProgramacion",
+
+    publicidad:
+      "adminPublicidad",
+
+    clientes:
+      "adminClientes"
+
+  };
+
+
+  const section =
+    document.getElementById(
+      sectionMap[tab]
+    );
+
+  if (section) {
+
+    section.classList.remove(
+      "hidden"
+    );
+
+  }
+
+
+  const index = [
+    "noticias",
+    "programacion",
+    "publicidad",
+    "clientes"
+  ].indexOf(tab);
+
+
+  const tabs =
+    document.querySelectorAll(
+      ".admin-tab"
+    );
+
+  if (tabs[index]) {
+
+    tabs[index].classList.add(
+      "active"
+    );
+
+  }
+
+}
+
+
+function showAdminSuccess(message) {
+
+  const element =
+    document.getElementById(
+      "adminMessage"
+    );
+
+  if (!element) {
+    return;
+  }
+
+  element.innerHTML =
+    `
+      <div class="message success">
+        ${escapeHTML(message)}
+      </div>
+    `;
+
+}
+
+
+function showAdminError(message) {
+
+  const element =
+    document.getElementById(
+      "adminMessage"
+    );
+
+  if (!element) {
+    return;
+  }
+
+  element.innerHTML =
+    `
+      <div class="message error">
+        ${escapeHTML(message)}
+      </div>
+    `;
+
+}
+
+
+function showAppError(
+  title,
+  message
+) {
+
+  document.getElementById(
+    "app"
+  ).innerHTML =
+    `
+    <section class="section">
+
+      <div class="container">
+
+        <div class="admin-card">
+
+          <h1>
+            ${escapeHTML(title)}
+          </h1>
+
+          <p>
+            ${escapeHTML(message)}
+          </p>
+
+        </div>
+
+      </div>
+
+    </section>
+    `;
+
+}
+
+
+/* =========================================================
+   CLIMA
+========================================================= */
+
+function renderWeatherPage() {
+
+  const app =
+    document.getElementById(
+      "app"
+    );
+
+  app.innerHTML = `
+
+    <section class="section weather-page">
+
+      <div class="container">
+
+        <div class="weather-box">
+
+          <span class="category-badge">
+            🌤️ GAMARRA TV
+          </span>
+
+          <h1 class="section-title"
+              style="color:white">
+            El clima
+          </h1>
+
+          <p>
+            Consulta las condiciones meteorológicas
+            actuales y el pronóstico.
+          </p>
+
+          <div class="weather-search">
+
+            <input
+              id="weatherCity"
+              placeholder="Ejemplo: Gamarra, Cesar"
+              value="Gamarra, Cesar"
+            >
+
+            <button
+              class="primary-button"
+              onclick="searchWeather()"
+            >
+              🔎 Buscar
+            </button>
+
+          </div>
+
+          <div
+            id="weatherResult"
+            class="message"
+          >
+            Consulta el clima de tu ciudad.
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  `;
+
+}
+
+
+async function searchWeather() {
+
+  const city =
+    document
+      .getElementById(
+        "weatherCity"
+      )
+      .value
+      .trim();
+
+  const result =
+    document.getElementById(
+      "weatherResult"
+    );
+
+
+  if (!city) {
+    return;
+  }
+
+
+  result.innerHTML =
+    "Consultando clima...";
+
+
+  try {
+
+    const geoResponse =
+      await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=es&format=json`
+      );
+
+    const geo =
+      await geoResponse.json();
+
+
+    if (
+      !geo.results ||
+      !geo.results.length
+    ) {
+
+      result.innerHTML =
+        "No encontramos esa ubicación.";
+
+      return;
+
+    }
+
+
+    const place =
+      geo.results[0];
+
+
+    const weatherResponse =
+      await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&timezone=auto`
+      );
+
+
+    const weather =
+      await weatherResponse.json();
+
+
+    result.innerHTML =
+      `
+      <h2>
+        ${escapeHTML(
+          place.name
+        )}, ${escapeHTML(
+          place.country || ""
+        )}
+      </h2>
+
+      <p>
+        🌡️ Temperatura:
+        <strong>
+          ${weather.current.temperature_2m}°C
+        </strong>
+      </p>
+
+      <p>
+        💧 Humedad:
+        ${weather.current.relative_humidity_2m}%
+      </p>
+
+      <p>
+        💨 Viento:
+        ${weather.current.wind_speed_10m} km/h
+      </p>
+      `;
+
+  } catch {
+
+    result.innerHTML =
+      "No fue posible consultar el clima en este momento.";
+
+  }
+
+}
+
+
+/* =========================================================
+   CONTACTO
+========================================================= */
+
+async function renderContactPage() {
+
+  const app =
+    document.getElementById(
+      "app"
+    );
+
+  app.innerHTML = `
+
+    <section class="section">
+
+      <div class="container">
+
+        <div class="contact-hero">
+
+          <span class="category-badge">
+            GTV MEDIOS
+          </span>
+
+          <h1>
+            Estamos para escucharte
+          </h1>
+
+          <p>
+            ¿Tienes una noticia, una denuncia,
+            una propuesta comercial o quieres
+            comunicarte con nuestro equipo?
+            Estamos disponibles para recibir
+            tus mensajes.
+          </p>
+
+        </div>
+
+
+        <div class="contact-grid">
+
+          <div class="contact-card">
+
+            <h2>
+              COMUNÍCATE CON NOSOTROS
+            </h2>
+
+            <p>
+              Gamarra TV es un medio regional
+              comprometido con informar,
+              conectar y dar voz a nuestra comunidad.
+            </p>
+
+
+            <div class="products-grid">
+
+              <div class="product-card">
+
+                <h3>
+                  Noticias
+                </h3>
+
+                <p>
+                  Envíanos información,
+                  fotografías o videos sobre
+                  hechos que estén ocurriendo.
+                </p>
+
+              </div>
+
+
+              <div class="product-card">
+
+                <h3>
+                  Publicidad
+                </h3>
+
+                <p>
+                  Comunícate con nosotros para
+                  conocer nuestras opciones
+                  comerciales.
+                </p>
+
+              </div>
+
+
+              <div class="product-card">
+
+                <h3>
+                  Radio
+                </h3>
+
+                <p>
+                  También puedes comunicarte
+                  con nuestro equipo para
+                  información relacionada con radio.
+                </p>
+
+              </div>
+
+
+              <div class="product-card">
+
+                <h3>
+                  Alianzas
+                </h3>
+
+                <p>
+                  Estamos abiertos a proyectos,
+                  alianzas y propuestas.
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="contact-card">
+
+            <h2>
+              CONTACTO
+            </h2>
+
+            <p>
+              Comunícate con Gamarra TV
+            </p>
+
+            <div class="contact-items">
+
+              <a
+                class="contact-item"
+                target="_blank"
+                href="https://wa.me/${WHATSAPP}"
+              >
+                💬
+                <strong>
+                  WhatsApp
+                </strong>
+                <br>
+                ${PHONE}
+              </a>
+
+
+              <a
+                class="contact-item"
+                href="tel:+${WHATSAPP}"
+              >
+                📞
+                <strong>
+                  Teléfono
+                </strong>
+                <br>
+                ${PHONE}
+              </a>
+
+
+              <a
+                class="contact-item"
+                href="mailto:${EMAIL}"
+              >
+                ✉️
+                <strong>
+                  Correo electrónico
+                </strong>
+                <br>
+                ${EMAIL}
+              </a>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  `;
+
+}
+
+
+/* =========================================================
+   CARRUSEL
+========================================================= */
+
+function moveCarousel(direction) {
+
+  const carousel =
+    document.getElementById(
+      "newsCarousel"
+    );
+
+  if (!carousel) {
+    return;
+  }
+
+  carousel.scrollBy({
+    left:
+      direction * 360,
+    behavior: "smooth"
+  });
+
+}
+
+
+/* =========================================================
+   MENÚ MÓVIL
+========================================================= */
+
+function toggleMobileMenu() {
+
+  const menu =
+    document.getElementById(
+      "mobileMenu"
+    );
+
+  menu.classList.toggle(
+    "open"
+  );
+
+}
+
+
+/* =========================================================
+   HELPERS ADMIN
+========================================================= */
+
+window.openPanel =
+  openPanel;
+
+window.closeLogin =
+  closeLogin;
+
+window.logout =
+  logout;
+
+window.showAdminTab =
+  showAdminTab;
+
+window.editNews =
+  editNews;
+
+window.deleteNews =
+  deleteNews;
+
+window.editProgram =
+  editProgram;
+
+window.deleteProgram =
+  deleteProgram;
+
+window.deleteAd =
+  deleteAd;
+
+window.deleteClient =
+  deleteClient;
+
+window.openArticle =
+  openArticle;
+
+window.navigateHome =
+  navigateHome;
+
+window.navigateNews =
+  navigateNews;
+
+window.navigateLive =
+  navigateLive;
+
+window.navigateWeather =
+  navigateWeather;
+
+window.navigateContact =
+  navigateContact;
+
+window.filterNewsPage =
+  filterNewsPage;
+
+window.filterHomeCategory =
+  filterHomeCategory;
+
+window.selectScheduleDay =
+  selectScheduleDay;
+
+window.moveCarousel =
+  moveCarousel;
+
+window.toggleMobileMenu =
+  toggleMobileMenu;
+
+window.searchWeather =
+  searchWeather;
+
+window.copyArticleLink =
+  copyArticleLink;
+
+
+/* =========================================================
+   FIN
+========================================================= */
