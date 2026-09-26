@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/noticia/:slug",
+      "destination": "/api/noticia?slug=:slug"
+    }
+  ]
+}
