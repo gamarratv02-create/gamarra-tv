@@ -80,14 +80,28 @@ module.exports = async function handler(req, res) {
 
     const finalSlug = String(article.slug || slugify(article.titulo) || article.id);
     const shareUrl = `${origin}/noticia/${encodeURIComponent(finalSlug)}`;
-    const appUrl = `${origin}/#/noticia/${encodeURIComponent(finalSlug)}`;
+    const appUrl = `${origin}/noticia/${encodeURIComponent(finalSlug)}`;
     const title = String(article.titulo || 'Noticia');
     const description = String(article.resumen || 'Noticias, televisión y actualidad de Gamarra TV.').replace(/\s+/g, ' ').trim().slice(0, 300);
     const image = absoluteImage(article.imagen_url, origin);
     const fullTitle = `${title} | ${SITE_NAME}`;
 
-    // IMPORTANT: crawlers receive the OG document directly. No JavaScript or meta-refresh
-    // is used for Facebook, because social crawlers need to read the tags immediately.
+    // Social crawlers receive the OG document directly. Human browsers receive the real SPA
+    // at the clean /noticia/slug URL, so the address stays shareable without a # fragment.
+    if (!isCrawler(req)) {
+      const fs = require('fs');
+      const path = require('path');
+      const indexPath = path.join(process.cwd(), 'index.html');
+      let indexHtml = fs.readFileSync(indexPath, 'utf8');
+      if (!indexHtml.includes('<base href="/">')) {
+        indexHtml = indexHtml.replace('<head>', '<head>\n<base href="/">');
+      }
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=300');
+      return res.end(indexHtml);
+    }
+
     const html = `<!doctype html>
 <html lang="es">
 <head>
@@ -119,7 +133,6 @@ module.exports = async function handler(req, res) {
 <img src="${esc(image)}" alt="${esc(title)}" width="1200" height="630">
 <p><a href="${esc(appUrl)}">Leer la noticia completa en Gamarra TV</a></p>
 </main>
-${isCrawler(req) ? '' : `<script>window.location.replace(${JSON.stringify(appUrl)});</script>`}
 </body>
 </html>`;
 
