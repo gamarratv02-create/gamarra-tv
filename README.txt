@@ -13,3 +13,9 @@ La señal OpenCaster está fija y no tiene recarga automática:
 https://new.opencaster.com/player/embed?user=gamarratv
 
 Para publicar desde el panel debes crear el usuario en Supabase Authentication y configurar RLS/permisos de las tablas.
+
+
+ACTUALIZACIÓN DE ÚLTIMAS NOTICIAS
+- La sección de inicio muestra solamente las 3 noticias más recientes, ordenadas por created_at.
+- La sección consulta Supabase nuevamente cada 45 segundos mientras el inicio está abierto. Cuando se publica una noticia nueva, el bloque se actualiza sin recargar toda la página.
+- La página completa de noticias sigue disponible desde el menú Noticias / el botón "Ver todas las noticias".
