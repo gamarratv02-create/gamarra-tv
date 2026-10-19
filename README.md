@@ -22,3 +22,7 @@ Conectar Supabase para:
 
 ## Despliegue
 Este proyecto funciona como sitio estático y puede desplegarse directamente en Vercel.
+
+## Administración de canales, radio y banners
+
+El panel autenticado incluye ahora formularios CRUD para `tv_channels`, `radio_stations` y `tv_banners`. Las imágenes pueden cargarse al bucket público `gtv-media`. Las políticas de Supabase deben permitir la operación solo a administradores. La aplicación Android aún debe conectarse a estas tablas por separado para consumir los cambios publicados sin recompilar.
