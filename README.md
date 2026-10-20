@@ -23,6 +23,8 @@ Conectar Supabase para:
 ## Despliegue
 Este proyecto funciona como sitio estático y puede desplegarse directamente en Vercel.
 
-## Administración de canales, radio y banners
-
-El panel autenticado incluye ahora formularios CRUD para `tv_channels`, `radio_stations` y `tv_banners`. Las imágenes pueden cargarse al bucket público `gtv-media`. Las políticas de Supabase deben permitir la operación solo a administradores. La aplicación Android aún debe conectarse a estas tablas por separado para consumir los cambios publicados sin recompilar.
+## Banners de eventos
+- Los banners de eventos y anuncios se administran desde `#/admin`, en la sección **Eventos y publicidad**.
+- Para publicar un evento, registra el título, la URL pública del afiche, un enlace opcional y los detalles de fecha/lugar.
+- Los banners activos aparecen en la página de inicio, debajo del encabezado y antes de las noticias destacadas, la televisión en vivo y las demás secciones.
+- Esta función reutiliza la tabla existente `publicidad` en Supabase; no requiere una tabla nueva. La tabla debe tener `titulo`, `imagen_url`, `enlace_url`, `descripcion`, `activo`, `orden` y `created_at`.

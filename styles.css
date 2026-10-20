@@ -223,3 +223,15 @@ input, textarea, select, button {
 .article-video{width:100%;margin:24px 0;background:#050a11;border-radius:16px;overflow:hidden;aspect-ratio:16/9;border:1px solid #162439}.article-video iframe,.article-video video{width:100%;height:100%;display:block;border:0;background:#000;object-fit:contain}.article-video video{object-fit:contain}
 @media(max-width:900px){.ads-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.ads-grid{grid-template-columns:1fr}.ad-info h3{font-size:16px}.article-video{border-radius:12px;margin:20px 0}}
+
+/* Banners de eventos destacados en la parte superior del inicio */
+.ads-section{padding:28px 0 32px;background:linear-gradient(135deg,#fff 0%,#edf5fc 100%);border-top:1px solid #e1eaf3;border-bottom:1px solid #e1eaf3}
+.ads-section .section-head{margin-bottom:18px}
+.ads-section .section-head h2{font-size:clamp(24px,3vw,34px);color:var(--navy)}
+.ads-section .section-head .kicker{color:#d51f2a}
+.ads-grid{align-items:stretch}
+.ad-card{height:100%;display:flex;flex-direction:column}
+.ad-media{aspect-ratio:16/7;min-height:150px}
+.ad-info{flex:1}
+.ad-info span{display:inline-block;margin-top:6px}
+@media(max-width:600px){.ads-section{padding:22px 0}.ad-media{aspect-ratio:16/9;min-height:0}.ads-grid{grid-template-columns:minmax(0,1fr)}}
