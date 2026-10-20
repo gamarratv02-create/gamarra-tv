@@ -1,0 +1,13 @@
+GAMARRA TV WEB - ACTUALIZACION DE BASE DE DATOS
+
+Incluye el proyecto web original y el archivo:
+  supabase_multitv_radios_carrusel.sql
+
+Este SQL crea las tablas para canales de televisión, radios y carrusel de inicio en Supabase.
+Pasos:
+1. Entra a Supabase y abre SQL Editor.
+2. Abre y ejecuta supabase_multitv_radios_carrusel.sql.
+3. Verifica que existan las tablas canales_tv, radios y carrusel_inicio.
+4. No reemplaza el proyecto Android ni publica cambios automáticamente en Vercel.
+
+IMPORTANTE: Esta entrega prepara el esquema de datos. La interfaz actual de administración web aún requiere implementar los formularios de alta/edición/eliminación y conectar el contenido público a estas tablas. Revisa las políticas RLS antes de producción.
