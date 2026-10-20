@@ -28,8 +28,3 @@ Este proyecto funciona como sitio estático y puede desplegarse directamente en 
 - Para publicar un evento, registra el título, la URL pública del afiche, un enlace opcional y los detalles de fecha/lugar.
 - Los banners activos aparecen en la página de inicio, debajo del encabezado y antes de las noticias destacadas, la televisión en vivo y las demás secciones.
 - Esta función reutiliza la tabla existente `publicidad` en Supabase; no requiere una tabla nueva. La tabla debe tener `titulo`, `imagen_url`, `enlace_url`, `descripcion`, `activo`, `orden` y `created_at`.
-
-## Base de datos para MULTITV, radios y carrusel
-Se incluye `supabase_multitv_radios_carrusel.sql` para crear las tablas `canales_tv`, `radios` y `carrusel_inicio` en Supabase. Ejecútalo desde **Supabase → SQL Editor** antes de conectar estos módulos al panel web.
-
-**Importante:** esta migración prepara las tablas, índices y políticas básicas de lectura/escritura para usuarios autenticados. La interfaz actual del panel aún no incluye los formularios CRUD para estas tres tablas; este archivo por sí solo no añade todavía esos controles ni cambia el reproductor público. Revisa las políticas de escritura antes de publicar en producción, especialmente si necesitas restringir la administración a los miembros de `gtv_admins`.
