@@ -252,3 +252,27 @@ html.season-christmas .breaking b{color:#b51f2d}
 html.season-christmas .section-head .kicker,html.season-christmas .kicker{color:#167044}
 html.season-christmas .seasonal-theme-decor{color:#c9a342}
 @media(max-width:600px){.seasonal-theme-banner{font-size:11px;min-height:32px;padding:7px 10px}.seasonal-theme-decor{right:8px;bottom:8px;font-size:24px}}
+
+/* Efectos de temporada más visibles, manteniendo legibilidad y navegación */
+.seasonal-particles{position:fixed;inset:0;z-index:1200;pointer-events:none;overflow:hidden}
+.season-particle{position:absolute;top:-8vh;display:block;opacity:.82;filter:drop-shadow(0 2px 4px rgba(0,0,0,.22));animation:season-fall 16s linear infinite;will-change:transform}
+@keyframes season-fall{0%{transform:translate3d(0,-8vh,0) rotate(0deg);opacity:0}10%{opacity:.9}90%{opacity:.8}100%{transform:translate3d(35px,112vh,0) rotate(360deg);opacity:0}}
+html.season-halloween body{background-color:#fff9f1;background-image:radial-gradient(ellipse at 8% 8%,rgba(255,132,35,.13),transparent 32%),radial-gradient(ellipse at 92% 22%,rgba(91,38,122,.10),transparent 30%)}
+html.season-halloween body:before{content:'🕸️';position:fixed;z-index:1100;top:42px;left:8px;font-size:clamp(42px,7vw,82px);opacity:.55;pointer-events:none;filter:drop-shadow(0 3px 5px #f6a04a)}
+html.season-halloween body:after{content:'🦇  🎃  🦇';position:fixed;z-index:1100;top:42px;right:12px;font-size:clamp(22px,3vw,36px);letter-spacing:8px;opacity:.78;pointer-events:none;animation:halloween-hover 4s ease-in-out infinite}
+@keyframes halloween-hover{0%,100%{transform:translateY(0)}50%{transform:translateY(12px)}}
+html.season-halloween .seasonal-theme-banner{min-height:48px;font-size:15px;letter-spacing:1px;text-shadow:0 2px 5px #000;background:repeating-linear-gradient(135deg,#21152f 0 18px,#713313 18px 36px,#21152f 36px 54px);box-shadow:0 4px 16px rgba(83,36,13,.25)}
+html.season-halloween .header{box-shadow:0 5px 20px rgba(116,55,15,.16);border-bottom:4px solid #f28c28}
+html.season-halloween .hero-main,html.season-halloween .feature,html.season-halloween .news-card{outline:1px solid rgba(242,140,40,.35);box-shadow:0 8px 26px rgba(75,35,13,.16)}
+html.season-halloween .tag{background:linear-gradient(110deg,#ed6b16,#54216f)}
+html.season-christmas body{background-color:#f5fbf7;background-image:radial-gradient(ellipse at 8% 8%,rgba(20,133,76,.12),transparent 32%),radial-gradient(ellipse at 92% 22%,rgba(196,31,48,.10),transparent 30%)}
+html.season-christmas body:before{content:'✨  🔴  ✨  🟡  ✨  🔴  ✨  🟡  ✨';position:fixed;z-index:1100;top:38px;left:0;width:100%;text-align:center;font-size:clamp(15px,2.3vw,27px);letter-spacing:clamp(2px,1vw,12px);pointer-events:none;filter:drop-shadow(0 2px 5px rgba(0,0,0,.15));animation:lights-twinkle 2s ease-in-out infinite alternate}
+html.season-christmas body:after{content:'🎄';position:fixed;z-index:1100;right:10px;bottom:48px;font-size:clamp(54px,8vw,100px);opacity:.72;pointer-events:none;filter:drop-shadow(0 4px 8px rgba(0,0,0,.18));animation:tree-glow 3s ease-in-out infinite}
+@keyframes lights-twinkle{from{opacity:.55}to{opacity:1;filter:brightness(1.35) drop-shadow(0 2px 8px #e3b83e)}}
+@keyframes tree-glow{0%,100%{transform:scale(1);opacity:.65}50%{transform:scale(1.06);opacity:.95}}
+html.season-christmas .seasonal-theme-banner{min-height:50px;font-size:15px;letter-spacing:.7px;text-shadow:0 2px 5px #000;background:linear-gradient(90deg,#075b37,#b51f32,#075b37);box-shadow:0 4px 16px rgba(10,83,48,.22)}
+html.season-christmas .header{box-shadow:0 5px 20px rgba(10,83,48,.15);border-bottom:4px solid #d6b44a}
+html.season-christmas .hero-main,html.season-christmas .feature,html.season-christmas .news-card{outline:1px solid rgba(21,125,70,.28);box-shadow:0 8px 26px rgba(12,79,48,.14)}
+html.season-christmas .tag{background:linear-gradient(110deg,#0b7545,#bd2638)}
+@media(prefers-reduced-motion:reduce){.season-particle,html.season-halloween body:after,html.season-christmas body:before,html.season-christmas body:after{animation:none!important}}
+@media(max-width:600px){html.season-halloween body:before{top:78px;left:2px;font-size:38px}html.season-halloween body:after{top:78px;font-size:20px;right:2px;letter-spacing:2px}html.season-christmas body:before{top:76px;font-size:13px;letter-spacing:2px}html.season-christmas body:after{right:2px;bottom:30px;font-size:54px}.season-particle{opacity:.65}}

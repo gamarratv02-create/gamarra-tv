@@ -25,6 +25,7 @@
 <body>
 <div id="seasonalThemeBanner" class="seasonal-theme-banner" hidden aria-live="polite"></div>
 <div id="seasonalThemeDecor" class="seasonal-theme-decor" aria-hidden="true" hidden></div>
+<div id="seasonalParticles" class="seasonal-particles" aria-hidden="true"></div>
 <script>
 (function(){
   // Fechas calculadas con la hora oficial de Colombia (UTC-5).
@@ -33,9 +34,9 @@
   const today=`${date.year}-${date.month}-${date.day}`;
   let mode='',message='',decor='';
   if(today>='2026-10-30' && today<='2026-10-31'){
-    mode='halloween';message='🎃 Especial Halloween · Gamarra TV';decor='🎃　🕸️';
+    mode='halloween';message='🎃 ¡ESPECIAL HALLOWEEN! · Gamarra TV · Noticias que dan escalofríos';decor='🎃　🕸️　🦇';
   }else if(today>='2026-11-30' && today<='2026-12-31'){
-    mode='christmas';message='🎄 Navidad y Feliz Año Nuevo 2027 · Gamarra TV';decor='✨　🎄';
+    mode='christmas';message='🎄 ¡FELIZ NAVIDAD Y PRÓSPERO AÑO NUEVO 2027! · Gamarra TV';decor='🎄　⭐　🎁';
   }
   if(mode){
     document.documentElement.classList.add('season-'+mode);
@@ -44,6 +45,11 @@
       const decoration=document.getElementById('seasonalThemeDecor');
       if(banner){banner.textContent=message;banner.hidden=false;}
       if(decoration){decoration.textContent=decor;decoration.hidden=false;}
+      const particles=document.getElementById('seasonalParticles');
+      if(particles){
+        const symbols=mode==='halloween'?['🎃','🦇','👻','🕸️','🦇','✨']:['❄️','❄','⭐','🎄','❅','✨'];
+        for(let i=0;i<26;i++){const item=document.createElement('span');item.className='season-particle';item.textContent=symbols[i%symbols.length];item.style.left=((i*37)%97)+'%';item.style.animationDelay=(-(i%13)*1.7)+'s';item.style.animationDuration=(12+(i%7)*2)+'s';item.style.fontSize=(14+(i%4)*6)+'px';particles.appendChild(item);}
+      }
     });
   }
 })();
