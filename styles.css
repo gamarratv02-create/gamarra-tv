@@ -276,3 +276,16 @@ html.season-christmas .hero-main,html.season-christmas .feature,html.season-chri
 html.season-christmas .tag{background:linear-gradient(110deg,#0b7545,#bd2638)}
 @media(prefers-reduced-motion:reduce){.season-particle,html.season-halloween body:after,html.season-christmas body:before,html.season-christmas body:after{animation:none!important}}
 @media(max-width:600px){html.season-halloween body:before{top:78px;left:2px;font-size:38px}html.season-halloween body:after{top:78px;font-size:20px;right:2px;letter-spacing:2px}html.season-christmas body:before{top:76px;font-size:13px;letter-spacing:2px}html.season-christmas body:after{right:2px;bottom:30px;font-size:54px}.season-particle{opacity:.65}}
+
+
+/* Sección especial Gamarra Decide 2027 */
+.decide-nav{color:#173b77!important;font-weight:900!important;white-space:nowrap}
+.decide-nav:hover{color:#b3262d!important}
+.gamarra-decide-hero{display:grid;grid-template-columns:minmax(180px,34%) 1fr;align-items:center;gap:clamp(18px,4vw,42px);margin:8px 0 28px;padding:clamp(18px,3vw,34px);border-radius:20px;background:linear-gradient(120deg,#f1f5fc 0%,#fff 55%,#fff4e9 100%);border:1px solid #dce4f1;box-shadow:0 12px 32px rgba(21,48,91,.10);overflow:hidden}
+.gamarra-decide-hero>img{display:block;width:100%;max-height:230px;object-fit:contain;border-radius:12px}
+.gamarra-decide-copy>span{display:inline-block;color:#a3232b;font-size:11px;font-weight:900;letter-spacing:1.5px}
+.gamarra-decide-copy h1{margin:8px 0 10px;color:#173b77;font-size:clamp(27px,4vw,43px);line-height:1.08}
+.gamarra-decide-copy p{max-width:680px;margin:0 0 12px;color:#39485e;font-size:clamp(14px,1.5vw,17px);line-height:1.65}
+.gamarra-decide-copy small{color:#69778b;font-weight:700}
+.news-chip[data-cat="gamarra_decide_2027"],.category-pill[href="#/categoria/gamarra_decide_2027"]{border-color:#173b77}
+@media(max-width:650px){.gamarra-decide-hero{grid-template-columns:1fr;text-align:center;gap:12px}.gamarra-decide-hero>img{max-height:170px}.decide-nav{white-space:normal}}
