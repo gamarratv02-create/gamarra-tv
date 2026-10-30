@@ -64,7 +64,7 @@ function newsPage(initialCat=''){
      return [n.titulo,n.resumen,n.contenido,n.categoria].some(v=>String(v||'').toLowerCase().includes(term));
    });
    results.innerHTML=filtered.length?filtered.map(card).join(''):`<div class="empty news-empty"><h2>No encontramos noticias</h2><p>Prueba con otra palabra o selecciona otra categoría.</p></div>`;
-   count.textContent=`${filtered.length} ${filtered.length===1?'noticia':'noticias'}`;
+   if(count) count.textContent=`${filtered.length} ${filtered.length===1?'noticia':'noticias'}`;
    select.value=activeCat;
    chips.forEach(c=>c.classList.toggle('active',c.dataset.cat===activeCat));
  }
