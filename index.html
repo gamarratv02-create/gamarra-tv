@@ -23,6 +23,31 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<div id="seasonalThemeBanner" class="seasonal-theme-banner" hidden aria-live="polite"></div>
+<div id="seasonalThemeDecor" class="seasonal-theme-decor" aria-hidden="true" hidden></div>
+<script>
+(function(){
+  // Fechas calculadas con la hora oficial de Colombia (UTC-5).
+  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Bogota',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  const date=Object.fromEntries(parts.filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+  const today=`${date.year}-${date.month}-${date.day}`;
+  let mode='',message='',decor='';
+  if(today>='2026-10-30' && today<='2026-10-31'){
+    mode='halloween';message='🎃 Especial Halloween · Gamarra TV';decor='🎃　🕸️';
+  }else if(today>='2026-11-30' && today<='2026-12-31'){
+    mode='christmas';message='🎄 Navidad y Feliz Año Nuevo 2027 · Gamarra TV';decor='✨　🎄';
+  }
+  if(mode){
+    document.documentElement.classList.add('season-'+mode);
+    document.addEventListener('DOMContentLoaded',()=>{
+      const banner=document.getElementById('seasonalThemeBanner');
+      const decoration=document.getElementById('seasonalThemeDecor');
+      if(banner){banner.textContent=message;banner.hidden=false;}
+      if(decoration){decoration.textContent=decor;decoration.hidden=false;}
+    });
+  }
+})();
+</script>
 <div class="topbar"><div class="container topbar-in"><span>Noticias, televisión y actualidad</span><div><a href="https://www.facebook.com/GamarraTelvision" target="_blank" rel="noopener">Facebook</a><a href="https://www.youtube.com/@gamarratvoficial" target="_blank" rel="noopener">YouTube</a><a href="https://www.instagram.com/gamarratvoficial/" target="_blank" rel="noopener">Instagram</a><a href="https://www.tiktok.com/@gamarratvoficial" target="_blank" rel="noopener">TikTok</a></div></div></div>
 <header class="header"><div class="container header-in"><a class="logo" href="#/" aria-label="Gamarra TV inicio"><img src="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png" alt="Gamarra TV"></a><button id="menuToggle" class="menu-toggle" aria-label="Abrir menú">☰</button><nav id="mainNav"><a href="#/">Inicio</a><a class="news-nav" href="#/noticias">📰 Noticias</a><a class="weather-nav" href="#/clima">☀️ Clima</a><a href="#/contacto">Contacto</a><a class="live-nav" href="#/en-vivo">🔴 En vivo</a></nav><a id="authLink" class="login" href="#/login">🔒 Iniciar sesión</a></div></header>
 <div class="breaking"><div class="container"><b>🔴 ÚLTIMA HORA</b><span id="breakingText">Gamarra TV | Noticias, televisión y actualidad</span></div></div>

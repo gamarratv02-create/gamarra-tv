@@ -235,3 +235,20 @@ input, textarea, select, button {
 .ad-info{flex:1}
 .ad-info span{display:inline-block;margin-top:6px}
 @media(max-width:600px){.ads-section{padding:22px 0}.ad-media{aspect-ratio:16/9;min-height:0}.ads-grid{grid-template-columns:minmax(0,1fr)}}
+
+
+/* Temporadas especiales automáticas: Halloween y Navidad 2026 */
+.seasonal-theme-banner{display:flex;align-items:center;justify-content:center;min-height:36px;padding:8px 14px;text-align:center;font-size:13px;font-weight:900;letter-spacing:.25px;color:#fff}
+.seasonal-theme-decor{position:fixed;z-index:30;right:12px;bottom:14px;pointer-events:none;font-size:clamp(22px,3vw,34px);opacity:.78;filter:drop-shadow(0 2px 5px rgba(0,0,0,.18))}
+.seasonal-theme-decor[hidden],.seasonal-theme-banner[hidden]{display:none}
+html.season-halloween .seasonal-theme-banner{background:linear-gradient(90deg,#21152f,#713313,#21152f)}
+html.season-halloween .header{border-bottom:3px solid #f28c28}
+html.season-halloween .breaking b{color:#f28c28}
+html.season-halloween .section-head .kicker,html.season-halloween .kicker{color:#c96b1c}
+html.season-halloween .seasonal-theme-decor{color:#f28c28}
+html.season-christmas .seasonal-theme-banner{background:linear-gradient(90deg,#0d5737,#a51f2d,#0d5737)}
+html.season-christmas .header{border-bottom:3px solid #c9a342}
+html.season-christmas .breaking b{color:#b51f2d}
+html.season-christmas .section-head .kicker,html.season-christmas .kicker{color:#167044}
+html.season-christmas .seasonal-theme-decor{color:#c9a342}
+@media(max-width:600px){.seasonal-theme-banner{font-size:11px;min-height:32px;padding:7px 10px}.seasonal-theme-decor{right:8px;bottom:8px;font-size:24px}}
