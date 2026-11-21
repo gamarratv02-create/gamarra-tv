@@ -118,7 +118,9 @@ async function admin(){
  ]);
  if(nr.error) throw nr.error;
  if(pr.error) throw pr.error;
- const news=nr.data||[], programs=pr.data||[], clients=cr.error?[]:(cr.data||[]), ads=ar.error?[]:(ar.data||[]), channels=chr.error?[]:(chr.data||[]), radios=rr.error?[]:(rr.data||[]), slides=car.error?[]:(car.data||[]), events=er.error?[]:(er.data||[]), eventGroups=gr.error?[]:(gr.data||[]);
+ if(chr.error) throw new Error(`No se pudieron leer los canales de TV (${chr.error.message}). Ejecuta el archivo supabase_canales_radios_carrusel.sql incluido en este ZIP y verifica las políticas de gtv_channels.`);
+ if(rr.error) throw new Error(`No se pudieron leer las emisoras de radio (${rr.error.message}). Ejecuta el archivo supabase_canales_radios_carrusel.sql incluido en este ZIP y verifica las políticas de gtv_radios.`);
+ const news=nr.data||[], programs=pr.data||[], clients=cr.error?[]:(cr.data||[]), ads=ar.error?[]:(ar.data||[]), channels=chr.data||[], radios=rr.data||[], slides=car.error?[]:(car.data||[]), events=er.error?[]:(er.data||[]), eventGroups=gr.error?[]:(gr.data||[]);
  app.innerHTML=`<section class="admin"><div class="container"><div class="panel">
  <div class="section-head"><div><span class="kicker">PANEL ADMINISTRATIVO</span><h2>Administrar Gamarra TV</h2><p class="section-subtitle">Publica, edita y elimina noticias y programas desde este mismo panel.</p></div><button id="logout" class="btn btn-dark">Cerrar sesión</button></div>
  <div id="adminMsg"></div>
