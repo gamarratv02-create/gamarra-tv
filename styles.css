@@ -313,3 +313,12 @@ html.season-christmas .tag{background:linear-gradient(110deg,#0b7545,#bd2638)}
 .gtv-photo-grid a{display:block;overflow:hidden;border-radius:14px;background:#edf1f2;aspect-ratio:4/3}.gtv-photo-grid img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}.gtv-photo-grid a:hover img{transform:scale(1.045)}
 @media(max-width:850px){.gtv-events-grid,.gtv-groups-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.gtv-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){.gtv-events-page{padding:28px 0 44px}.gtv-events-grid,.gtv-groups-grid,.gtv-photo-grid{grid-template-columns:1fr}.gtv-event-card>img{height:205px}.gtv-event-detail-head{grid-template-columns:1fr;padding:14px;gap:14px}.gtv-event-detail-head img{max-height:210px}.events-nav{white-space:normal}}
+
+/* Contenidos dinámicos de TV, radio y carrusel administrados desde Supabase */
+.gtv-broadcast-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:18px}
+.gtv-broadcast-card{display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid rgba(20,45,80,.12);border-radius:16px;background:#fff;box-shadow:0 8px 24px rgba(10,30,60,.06);color:inherit;text-decoration:none;min-width:0}
+.gtv-broadcast-card img{width:100%;height:150px;object-fit:contain;border-radius:10px;background:#f4f7fb}
+.gtv-broadcast-card strong{font-size:1rem;color:#10294b}
+.gtv-broadcast-card a{font-weight:700;color:#0876d1;text-decoration:none}
+.gtv-broadcast-card audio{width:100%;max-width:100%}
+.gtv-dynamic-carousel .gtv-broadcast-card img{height:210px;object-fit:cover}
