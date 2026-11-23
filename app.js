@@ -3,7 +3,7 @@ const C=window.__SUPABASE_CONFIG__||{};
 const sb=window.supabase?.createClient(C.url,C.publishableKey);
 const app=document.getElementById('app');
 if(!sb){app.innerHTML='<div class="error-box"><h2>No se pudo inicializar Gamarra TV</h2><p>Revisa la configuración de Supabase.</p></div>';return}
-const DAYS=[['lunes','LUN',1],['martes','MAR',2],['miercoles','MIÉ',3],['jueves','JUE',4],['viernes','VIE',5],['sabado','SÁB',6],['domingo','DOM',7]];
+const DAYS=[['lunes','LUN',1],['martes','MAR',2],['miercoles','MIÉ',3],['jueves','JUE',4],['viernes','VIE',5],['sabado','SÁB',6],['domingo','DOM',0]];
 const CATS=['gamarra','seguridad','judicial','politica','educacion','salud','economia','deportes','region','nacionales','internacionales','entretenimiento','gamarra_decide_2027'];
 const S={session:null,news:[],programs:[],clients:[],ads:[],day:null,events:[],eventGroups:[]};
 const esc=x=>String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
@@ -12,7 +12,7 @@ const date=v=>v?new Intl.DateTimeFormat('es-CO',{dateStyle:'medium',timeStyle:'s
 const shortDate=v=>v?new Intl.DateTimeFormat('es-CO',{day:'2-digit',month:'short',year:'numeric'}).format(new Date(v)):'';
 const time=v=>{if(!v)return'';const [h,m]=String(v).slice(0,5).split(':').map(Number);return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'p.m.':'a.m.'}`};
 const dayInfo=k=>DAYS.find(x=>x[0]===k)||DAYS[0];
-const today=()=>{const jsDay=new Date().getDay();return [7,1,2,3,4,5,6][jsDay]};
+const today=()=>new Date().getDay();
 const todayName=()=>DAYS.find(x=>x[2]===today())[0];
 const mins=v=>{if(!v)return null;const [h,m]=String(v).slice(0,5).split(':').map(Number);return Number.isFinite(h)&&Number.isFinite(m)?h*60+m:null};
 function notify(msg,type='success'){const e=document.createElement('div');e.className='alert '+(type==='error'?'alert-error':'alert-success');e.textContent=msg;e.style.cssText='position:fixed;right:16px;bottom:16px;z-index:3000;max-width:460px;box-shadow:0 10px 30px #0003';document.body.appendChild(e);setTimeout(()=>e.remove(),5000)}
