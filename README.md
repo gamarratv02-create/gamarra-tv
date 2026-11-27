@@ -28,3 +28,9 @@ Este proyecto funciona como sitio estático y puede desplegarse directamente en 
 - Para publicar un evento, registra el título, la URL pública del afiche, un enlace opcional y los detalles de fecha/lugar.
 - Los banners activos aparecen en la página de inicio, debajo del encabezado y antes de las noticias destacadas, la televisión en vivo y las demás secciones.
 - Esta función reutiliza la tabla existente `publicidad` en Supabase; no requiere una tabla nueva. La tabla debe tener `titulo`, `imagen_url`, `enlace_url`, `descripcion`, `activo`, `orden` y `created_at`.
+
+
+## Carrusel principal de banners
+- Los banners se administran en el panel, en **Carrusel principal**.
+- Cada banner tiene duración individual configurable entre 2 y 120 segundos.
+- Ejecuta `ACTUALIZAR_DURACION_BANNERS.sql` una vez en Supabase para agregar la columna de duración.
