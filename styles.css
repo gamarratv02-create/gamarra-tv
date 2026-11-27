@@ -239,7 +239,7 @@ input, textarea, select, button {
 
 /* Temporadas especiales automáticas: Halloween y Navidad 2026 */
 .seasonal-theme-banner{display:flex;align-items:center;justify-content:center;min-height:36px;padding:8px 14px;text-align:center;font-size:13px;font-weight:900;letter-spacing:.25px;color:#fff}
-.seasonal-theme-decor{position:fixed;z-index:30;right:12px;bottom:14px;pointer-events:none;font-size:clamp(22px,3vw,34px);opacity:.78;filter:drop-shadow(0 2px 5px rgba(0,0,0,.18))}
+.seasonal-theme-decor{display:none!important}
 .seasonal-theme-decor[hidden],.seasonal-theme-banner[hidden]{display:none}
 html.season-halloween .seasonal-theme-banner{background:linear-gradient(90deg,#21152f,#713313,#21152f)}
 html.season-halloween .header{border-bottom:3px solid #f28c28}
@@ -254,7 +254,7 @@ html.season-christmas .seasonal-theme-decor{color:#c9a342}
 @media(max-width:600px){.seasonal-theme-banner{font-size:11px;min-height:32px;padding:7px 10px}.seasonal-theme-decor{right:8px;bottom:8px;font-size:24px}}
 
 /* Efectos de temporada más visibles, manteniendo legibilidad y navegación */
-.seasonal-particles{position:fixed;inset:0;z-index:1200;pointer-events:none;overflow:hidden}
+.seasonal-particles{display:none!important}
 .season-particle{position:absolute;top:-8vh;display:block;opacity:.82;filter:drop-shadow(0 2px 4px rgba(0,0,0,.22));animation:season-fall 16s linear infinite;will-change:transform}
 @keyframes season-fall{0%{transform:translate3d(0,-8vh,0) rotate(0deg);opacity:0}10%{opacity:.9}90%{opacity:.8}100%{transform:translate3d(35px,112vh,0) rotate(360deg);opacity:0}}
 html.season-halloween body{background-color:#fff9f1;background-image:radial-gradient(ellipse at 8% 8%,rgba(255,132,35,.13),transparent 32%),radial-gradient(ellipse at 92% 22%,rgba(91,38,122,.10),transparent 30%)}
@@ -313,3 +313,20 @@ html.season-christmas .tag{background:linear-gradient(110deg,#0b7545,#bd2638)}
 .gtv-photo-grid a{display:block;overflow:hidden;border-radius:14px;background:#edf1f2;aspect-ratio:4/3}.gtv-photo-grid img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}.gtv-photo-grid a:hover img{transform:scale(1.045)}
 @media(max-width:850px){.gtv-events-grid,.gtv-groups-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.gtv-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:580px){.gtv-events-page{padding:28px 0 44px}.gtv-events-grid,.gtv-groups-grid,.gtv-photo-grid{grid-template-columns:1fr}.gtv-event-card>img{height:205px}.gtv-event-detail-head{grid-template-columns:1fr;padding:14px;gap:14px}.gtv-event-detail-head img{max-height:210px}.events-nav{white-space:normal}}
+
+/* Banners principales en la parte superior de la portada */
+.top-banners{padding:14px 0 8px;background:#fff}
+.top-banner-track{position:relative;overflow:hidden;border-radius:12px;min-height:80px;background:#f1f3f5}
+.top-banner-slide{display:none;width:100%;line-height:0}
+.top-banner-slide.active{display:block;animation:bannerFade .45s ease}
+.top-banner-slide img{display:block;width:100%;height:auto;max-height:300px;object-fit:contain;margin:auto}
+.top-banner-dots{display:flex;justify-content:center;gap:7px;padding-top:8px}
+.top-banner-dot{width:8px;height:8px;padding:0;border:0;border-radius:50%;background:#c5cbd1;cursor:pointer}
+.top-banner-dot.active{background:#146b43;width:22px;border-radius:8px}
+@keyframes bannerFade{from{opacity:.35}to{opacity:1}}
+.whatsapp-share{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:#168b50;color:#fff;padding:12px 16px;border-radius:8px;font-weight:800}
+html.season-christmas .seasonal-theme-banner{background:linear-gradient(90deg,#075b37,#b51f32,#075b37);min-height:44px;font-size:15px;font-weight:900;letter-spacing:.6px;color:#fff}
+html.season-christmas .header{border-bottom:3px solid #c9a342}
+@media(max-width:600px){.top-banners{padding:8px 0 4px}.top-banner-track{border-radius:7px;min-height:48px}.top-banner-slide img{max-height:180px}.seasonal-theme-banner{font-size:12px;min-height:36px}}
+
+html.season-christmas body:before,html.season-christmas body:after{content:none!important;display:none!important}
