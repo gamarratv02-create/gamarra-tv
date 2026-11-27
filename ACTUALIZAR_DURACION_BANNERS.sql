@@ -1,4 +1,9 @@
--- Ejecutar en Supabase > SQL Editor para habilitar duración por banner.
-alter table public.carrusel_inicio add column if not exists duracion_segundos integer not null default 5;
-alter table public.carrusel_inicio drop constraint if exists carrusel_inicio_duracion_segundos_check;
-alter table public.carrusel_inicio add constraint carrusel_inicio_duracion_segundos_check check (duracion_segundos between 2 and 120);
+-- Gamarra TV: duración individual para cada banner del carrusel principal.
+-- Ejecutar una sola vez en Supabase > SQL Editor > New query.
+ALTER TABLE public.carrusel_inicio
+ADD COLUMN IF NOT EXISTS duracion_segundos integer NOT NULL DEFAULT 6;
+
+-- Normaliza valores existentes o inválidos.
+UPDATE public.carrusel_inicio
+SET duracion_segundos = 6
+WHERE duracion_segundos IS NULL OR duracion_segundos < 1;

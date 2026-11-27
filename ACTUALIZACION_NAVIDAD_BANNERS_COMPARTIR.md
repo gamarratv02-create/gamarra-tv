@@ -14,3 +14,7 @@
 4. Comprueba que existan banners activos en la tabla `carrusel_inicio` de Supabase.
 
 No se requiere una nueva tabla ni ejecutar SQL para estos cambios.
+
+## Duración individual de los banners
+
+También se incluye `ACTUALIZAR_DURACION_BANNERS.sql` e `INSTRUCCIONES_DURACION_BANNERS.md`. Ejecuta el SQL en Supabase antes de publicar para habilitar el tiempo individual de cada banner desde el panel administrativo.
