@@ -33,16 +33,22 @@
   const date=Object.fromEntries(parts.filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
   const today=`${date.year}-${date.month}-${date.day}`;
   let mode='',message='',decor='';
+  const christmasLogo='https://cdn.phototourl.com/anon/2026-11-27-2f9353be-4640-4b93-bc16-794403d7863b.png';
+  const originalLogo='https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png';
   if(today>='2026-10-30' && today<='2026-10-31'){
     mode='halloween';message='🎃 ¡ESPECIAL HALLOWEEN! · Gamarra TV · Noticias que dan escalofríos';decor='🎃　🕸️　🦇';
-  }else if(today>='2026-11-30' && today<='2026-12-31'){
+  }else if(today>='2026-11-27' && today<='2026-12-31'){
     mode='christmas';message='🎄 ¡FELIZ NAVIDAD Y PRÓSPERO AÑO NUEVO 2027! · Gamarra TV';decor='🎄　⭐　🎁';
+    window.__GTV_SEASONAL_LOGO__=christmasLogo;
+  }else{
+    window.__GTV_SEASONAL_LOGO__=originalLogo;
   }
   if(mode){
     document.documentElement.classList.add('season-'+mode);
     document.addEventListener('DOMContentLoaded',()=>{
       const banner=document.getElementById('seasonalThemeBanner');
       const decoration=document.getElementById('seasonalThemeDecor');
+      if(mode==='christmas'){document.querySelectorAll('.header .logo img,.footer-logo').forEach(img=>{img.src=christmasLogo;img.alt='Gamarra TV - Navidad'});}
       if(banner){banner.textContent=message;banner.hidden=false;}
       if(decoration){decoration.textContent=decor;decoration.hidden=false;}
       const particles=document.getElementById('seasonalParticles');
@@ -61,7 +67,7 @@
 <footer class="footer"><div class="container footer-grid"><div><img src="https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png" alt="Gamarra TV" class="footer-logo"><p>Gamarra TV es un medio de comunicación local dedicado a informar sobre Gamarra, el sur del Cesar y el Magdalena Medio.</p><p>Noticias, televisión, deportes, cultura y actualidad.</p></div><div><h3>Noticias</h3><a href="#/noticias">📰 Todas las noticias</a><a href="#/noticias">🔎 Buscar por categoría</a><a href="#/noticias">Gamarra · Seguridad · Judicial</a><a href="#/noticias">Política · Educación · Salud</a><a href="#/noticias">Economía · Deportes · Región</a><a href="#/noticias">Nacionales · Internacionales</a><a href="#/noticias">Entretenimiento</a><a href="#/categoria/gamarra_decide_2027">🗳️ Gamarra Decide 2027</a></div><div><h3>Gamarra TV</h3><a href="#/en-vivo">🔴 Señal en vivo</a><a href="#/programacion">Programación</a><a href="#/clima">☀️ Clima</a><a href="#/contacto">Contacto</a><a href="#/login">Iniciar sesión</a></div><div><h3>Contacto</h3><a href="https://wa.me/573027820622" target="_blank" rel="noopener">💬 WhatsApp: 302 782 0622</a><a href="tel:+573027820622">📞 Teléfono: 302 782 0622</a><a href="mailto:gamarratv02@gmail.com">✉️ gamarratv02@gmail.com</a></div><div><h3>Síguenos</h3><a href="https://www.facebook.com/GamarraTelvision" target="_blank" rel="noopener">Facebook</a><a href="https://www.youtube.com/@gamarratvoficial" target="_blank" rel="noopener">YouTube</a><a href="https://www.instagram.com/gamarratvoficial/" target="_blank" rel="noopener">Instagram</a><a href="https://www.tiktok.com/@gamarratvoficial" target="_blank" rel="noopener">TikTok</a></div></div><div class="footer-bottom">© <span id="year"></span> Gamarra TV · Todos los derechos reservados.</div></footer>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.__SUPABASE_CONFIG__={url:"https://hjexlltqhjdmlwxgptpj.supabase.co",publishableKey:"sb_publishable_tXJAIc_OeskuGOgXB_7pfg_HyVjbGsF",liveUrl:"https://new.opencaster.com/player/embed?user=gamarratv",
- logo:"https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"};</script>
+ logo:window.__GTV_SEASONAL_LOGO__||"https://i.ibb.co/gGgdZ6x/Chat-GPT-Image-14-may-2026-18-57-48.png"};</script>
 <script src="app.js" defer></script>
 <script>document.addEventListener('DOMContentLoaded',()=>{document.getElementById('year').textContent=new Date().getFullYear();const b=document.getElementById('menuToggle'),n=document.getElementById('mainNav');b.onclick=()=>n.classList.toggle('open');n.addEventListener('click',e=>{if(e.target.tagName==='A')n.classList.remove('open')})});</script>
 </body></html>

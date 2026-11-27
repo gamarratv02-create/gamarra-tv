@@ -27,7 +27,6 @@ create table if not exists public.carrusel_inicio (
   imagen_url text not null,
   enlace_url text,
   orden integer not null default 1,
-  duracion_segundos integer not null default 5 check (duracion_segundos between 2 and 120),
   activo boolean not null default true,
   created_at timestamptz not null default now()
 );
@@ -61,8 +60,3 @@ for all to authenticated using (true) with check (true);
 create index if not exists canales_tv_orden_idx on public.canales_tv (orden, created_at);
 create index if not exists emisoras_radio_orden_idx on public.emisoras_radio (orden, created_at);
 create index if not exists carrusel_inicio_orden_idx on public.carrusel_inicio (orden, created_at);
-
--- Duración individual de cada banner (también actualiza instalaciones existentes).
-alter table public.carrusel_inicio add column if not exists duracion_segundos integer not null default 5;
-alter table public.carrusel_inicio drop constraint if exists carrusel_inicio_duracion_segundos_check;
-alter table public.carrusel_inicio add constraint carrusel_inicio_duracion_segundos_check check (duracion_segundos between 2 and 120);
