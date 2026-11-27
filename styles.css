@@ -330,3 +330,19 @@ html.season-christmas .header{border-bottom:3px solid #c9a342}
 @media(max-width:600px){.top-banners{padding:8px 0 4px}.top-banner-track{border-radius:7px;min-height:48px}.top-banner-slide img{max-height:180px}.seasonal-theme-banner{font-size:12px;min-height:36px}}
 
 html.season-christmas body:before,html.season-christmas body:after{content:none!important;display:none!important}
+
+/* Calendario de programación especial por fecha */
+.schedule-calendar-admin{margin-top:28px;padding:22px;background:#f7f9fc;border:1px solid #dfe7ef;border-radius:16px}
+.calendar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px 0}
+.calendar-toolbar strong{text-transform:capitalize;color:#102b45;font-size:18px}
+.schedule-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-bottom:22px}
+.calendar-weekday{text-align:center;padding:9px 2px;color:#6b8094;font-size:10px;font-weight:900;letter-spacing:.5px}
+.calendar-blank{min-height:64px}
+.calendar-day{min-width:0;min-height:64px;border:1px solid #dce5ee;border-radius:9px;background:#fff;color:#17334e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;font-weight:800}
+.calendar-day:hover{border-color:#0789d6;background:#eef8ff}
+.calendar-day.selected{background:#082b49;border-color:#082b49;color:#fff}
+.calendar-day.has-events{box-shadow:inset 0 -3px 0 #10a5dc}
+.calendar-day small{font-size:9px;color:#0789d6;font-weight:900}
+.calendar-day.selected small{color:#8bdcff}
+.schedule-calendar-admin .form-grid{background:#fff;border:1px solid #e1e8ef;border-radius:12px;padding:18px;margin:16px 0}
+@media(max-width:600px){.schedule-calendar-admin{padding:12px}.calendar-toolbar{flex-wrap:wrap}.calendar-toolbar strong{order:-1;width:100%;text-align:center}.calendar-day{min-height:48px;font-size:12px}.calendar-day small{font-size:8px}.calendar-blank{min-height:48px}.schedule-calendar-grid{gap:3px}}
